@@ -64,7 +64,7 @@ public class TcpClientDataReceiveThread extends Thread {
 //                Log.e(TAG, "客户端连接中断", e);
                 //服务器已经断开
                 serviceMap.remove(address);
-                //todo 发送服务器下线事件
+                // 发送服务器下线事件
                 EventBus.getDefault().post(new TcpServiceDisconnectEvent(address));
                 return;
             }

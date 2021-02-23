@@ -5,6 +5,7 @@ import android.util.Log;
 import com.mjsoftking.tcplib.dispose.TcpBaseDataDispose;
 import com.mjsoftking.tcplib.dispose.TcpBaseDataGenerate;
 import com.mjsoftking.tcplib.event.client.TcpServiceConnectEvent;
+import com.mjsoftking.tcplib.event.client.TcpServiceConnectFailEvent;
 import com.mjsoftking.tcplib.tcpthread.TcpClientDataReceiveThread;
 
 import org.greenrobot.eventbus.EventBus;
@@ -105,8 +106,9 @@ public class TcpLibClient {
                 //socket关闭时，接收方法就会被关闭
                 new TcpClientDataReceiveThread(socket, address, serviceMap, getDataDispose()).start();
             } catch (IOException e) {
-                //todo 服务器连接失败
-                e.printStackTrace();
+                Log.e(TAG, "服务器连接失败", e);
+                //发送服务器连接失败事件
+                EventBus.getDefault().post(new TcpServiceConnectFailEvent(address));
             }
         }).start();
     }
