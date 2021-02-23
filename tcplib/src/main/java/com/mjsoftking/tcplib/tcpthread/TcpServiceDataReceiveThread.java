@@ -53,7 +53,7 @@ public class TcpServiceDataReceiveThread extends Thread {
                 int bufferLength = client.getInputStream().read(buffer);
                 if (bufferLength <= 0) {
                     //todo 暂定
-                    throw new IOException("认为客户端断开了");
+                    throw new IOException("客户端断开了");
                 }
                 byte[] dataBuffer = new byte[bufferLength];
                 System.arraycopy(buffer, 0, dataBuffer, 0, bufferLength);
