@@ -37,15 +37,22 @@ public class TcpLibClient {
     }
 
     private TcpLibClient() {
-        serviceMap = new ConcurrentHashMap<>();
+        SERVICE_MAP = new ConcurrentHashMap<>();
     }
 
-    //存储连接上的服务端
-    private Map<String, TcpDataDisposeBuilder> serviceMap;
+    //存储连接上的服务端和对应此服务器连接的发送和接收数据的处理规则
+    private final Map<String, TcpDataDisposeBuilder> SERVICE_MAP;
 
+    /**
+     * 发起连接
+     *
+     * @param ipAddress ip地址
+     * @param port      端口号
+     * @param builder   使用builder生成对发送数据生成和接收数据解析的实现
+     */
     public synchronized void connect(String ipAddress, int port, @NonNull TcpDataDisposeBuilder builder) {
         final String address = ipAddress + ":" + port;
-        if (null != serviceMap.get(address)) {
+        if (null != SERVICE_MAP.get(address)) {
             Log.w(TAG, "指定服务端已经连接上");
             return;
         }
@@ -55,12 +62,12 @@ public class TcpLibClient {
                 //超时不限制
                 socket.setSoTimeout(0);
                 //线程安全的map
-                serviceMap.put(address, builder.setSocket(socket));
+                SERVICE_MAP.put(address, builder.setSocket(socket));
                 //发送服务器已连接事件
                 EventBus.getDefault().post(new TcpServiceConnectEvent(address));
 
                 //socket关闭时，接收方法就会被关闭
-                new TcpDataReceiveThread(address, serviceMap, true).start();
+                new TcpDataReceiveThread(address, SERVICE_MAP, true).start();
             } catch (IOException e) {
                 Log.e(TAG, "服务器连接失败", e);
                 //发送服务器连接失败事件
@@ -70,10 +77,12 @@ public class TcpLibClient {
     }
 
     /**
-     * 关闭服务监听
+     * 关闭对指定服务端的连接
+     *
+     * @param address 服务端地址，ip:port 形式，如：0.0.0.0:30000
      */
     public synchronized void close(String address) {
-        TcpDataDisposeBuilder disposeBuilder = serviceMap.get(address);
+        TcpDataDisposeBuilder disposeBuilder = SERVICE_MAP.get(address);
         if (null == disposeBuilder) {
             return;
         }
@@ -89,11 +98,11 @@ public class TcpLibClient {
     /**
      * 向指定的服务端端按照指定数据格式发送数据
      *
-     * @param address 服务端地址带端口号 形式: ip:port
+     * @param address 服务端地址，ip:port 形式，如：0.0.0.0:30000
      * @param content 内容
      */
     public void sendMessage(String address, String content) {
-        TcpDataDisposeBuilder disposeBuilder = serviceMap.get(address);
+        TcpDataDisposeBuilder disposeBuilder = SERVICE_MAP.get(address);
         if (null == disposeBuilder) {
             Log.w(TAG, "指定服务端未连接");
             return;
@@ -112,12 +121,12 @@ public class TcpLibClient {
 
 
     /**
-     * 向指定的所有已连接的服务端端按照指定数据格式发送数据
+     * 向所有已连接的服务端按照指定数据格式发送数据
      *
      * @param content 内容
      */
     public void sendAllMessage(String content) {
-        for (String address : serviceMap.keySet()) {
+        for (String address : SERVICE_MAP.keySet()) {
             sendMessage(address, content);
         }
     }

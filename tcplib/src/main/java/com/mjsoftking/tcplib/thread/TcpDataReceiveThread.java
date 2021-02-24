@@ -16,7 +16,7 @@ import java.net.Socket;
 import java.util.Map;
 
 /**
- * 用途：
+ * 用途：数据接收线程，将数据存入缓冲区后由数据处理线程处理
  * <p>
  * 作者：mjSoftKing
  * 时间：2021/02/22
@@ -52,7 +52,7 @@ public class TcpDataReceiveThread extends Thread {
     public void run() {
         while (true) {
             try {
-                byte[] buffer = new byte[1024];
+                byte[] buffer = new byte[100 * 1024];
                 int bufferLength = client.getInputStream().read(buffer);
                 if (bufferLength <= 0) {
                     throw new IOException("客户端断开了");

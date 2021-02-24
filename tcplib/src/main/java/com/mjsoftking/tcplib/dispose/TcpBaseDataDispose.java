@@ -13,6 +13,6 @@ import com.mjsoftking.tcplib.list.ByteQueueList;
  */
 public interface TcpBaseDataDispose {
 
-    void dispose(String clientAddress, ByteQueueList bufferQueue);
+    void dispose(String address, ByteQueueList bufferQueue);
 
 }

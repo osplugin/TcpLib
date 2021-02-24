@@ -1,7 +1,8 @@
 package com.mjsoftking.tcplib.dispose;
 
 /**
- * 用途：发送数据是的报文生成器
+ * 用途：发送数据时的报文生成器
+ * <p>
  * 按照报文格式生成报文数据
  * <p>
  * 作者：mjSoftKing

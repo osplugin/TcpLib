@@ -5,7 +5,7 @@ import com.mjsoftking.tcplib.dispose.TcpBaseDataDispose;
 import com.mjsoftking.tcplib.list.ByteQueueList;
 
 /**
- * 用途：
+ * 用途：对接收到数据缓冲区的数据进行处理的线程，具体处理规则由传入的处理器处理
  * <p>
  * 作者：mjSoftKing
  * 时间：2021/02/22

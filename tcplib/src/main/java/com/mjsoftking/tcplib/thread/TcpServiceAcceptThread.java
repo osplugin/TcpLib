@@ -15,7 +15,7 @@ import java.net.Socket;
 import java.util.Map;
 
 /**
- * 用途：
+ * 用途：服务器启动后开启的等待客户端连接线程
  * <p>
  * 作者：mjSoftKing
  * 时间：2021/02/22
