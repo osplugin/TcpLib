@@ -7,7 +7,7 @@ import androidx.annotation.NonNull;
 import com.mjsoftking.tcplib.dispose.TcpDataDisposeBuilder;
 import com.mjsoftking.tcplib.event.client.TcpServiceConnectEvent;
 import com.mjsoftking.tcplib.event.client.TcpServiceConnectFailEvent;
-import com.mjsoftking.tcplib.tcpthread.TcpClientDataReceiveThread;
+import com.mjsoftking.tcplib.tcpthread.TcpDataReceiveThread;
 
 import org.greenrobot.eventbus.EventBus;
 
@@ -60,7 +60,7 @@ public class TcpLibClient {
                 EventBus.getDefault().post(new TcpServiceConnectEvent(address));
 
                 //socket关闭时，接收方法就会被关闭
-                new TcpClientDataReceiveThread(address, serviceMap).start();
+                new TcpDataReceiveThread(address, serviceMap, true).start();
             } catch (IOException e) {
                 Log.e(TAG, "服务器连接失败", e);
                 //发送服务器连接失败事件

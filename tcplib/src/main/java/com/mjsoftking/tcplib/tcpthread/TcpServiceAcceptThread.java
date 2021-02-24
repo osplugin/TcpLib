@@ -42,8 +42,8 @@ public class TcpServiceAcceptThread extends Thread {
                 EventBus.getDefault().post(new TcpClientConnectEvent(address));
 
                 //对客户端开启数据接收线程
-                TcpServiceDataReceiveThread tcpServiceDataReceiveThread = new TcpServiceDataReceiveThread(client, address, clientMap);
-                tcpServiceDataReceiveThread.start();
+                TcpDataReceiveThread tcpDataReceiveThread = new TcpDataReceiveThread(address, clientMap, false);
+                tcpDataReceiveThread.start();
             } catch (IOException e) {
                 e.printStackTrace();
                 //todo 服务器已经断开
