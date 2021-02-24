@@ -7,7 +7,7 @@ import androidx.annotation.NonNull;
 import com.mjsoftking.tcplib.dispose.TcpDataDisposeBuilder;
 import com.mjsoftking.tcplib.event.client.TcpServiceConnectEvent;
 import com.mjsoftking.tcplib.event.client.TcpServiceConnectFailEvent;
-import com.mjsoftking.tcplib.tcpthread.TcpDataReceiveThread;
+import com.mjsoftking.tcplib.thread.TcpDataReceiveThread;
 
 import org.greenrobot.eventbus.EventBus;
 
@@ -89,7 +89,7 @@ public class TcpLibClient {
     /**
      * 向指定的服务端端按照指定数据格式发送数据
      *
-     * @param address 服务端地址带端口号
+     * @param address 服务端地址带端口号 形式: ip:port
      * @param content 内容
      */
     public void sendMessage(String address, String content) {
@@ -110,5 +110,16 @@ public class TcpLibClient {
         }).start();
     }
 
+
+    /**
+     * 向指定的所有已连接的服务端端按照指定数据格式发送数据
+     *
+     * @param content 内容
+     */
+    public void sendAllMessage(String content) {
+        for (String address : serviceMap.keySet()) {
+            sendMessage(address, content);
+        }
+    }
 
 }

@@ -1,8 +1,11 @@
-package com.mjsoftking.tcplib.tcpthread;
+package com.mjsoftking.tcplib.thread;
 
+
+import android.util.Log;
 
 import com.mjsoftking.tcplib.dispose.TcpDataDisposeBuilder;
 import com.mjsoftking.tcplib.event.service.TcpClientConnectEvent;
+import com.mjsoftking.tcplib.event.service.TcpServiceCloseEvent;
 
 import org.greenrobot.eventbus.EventBus;
 
@@ -19,11 +22,15 @@ import java.util.Map;
  */
 public class TcpServiceAcceptThread extends Thread {
 
+    private final static String TAG = TcpServiceAcceptThread.class.getSimpleName();
+
     private final ServerSocket serverSocket;
     private final Map<String, TcpDataDisposeBuilder> clientMap;
     private final TcpDataDisposeBuilder builder;
+    private final int port;
 
     public TcpServiceAcceptThread(ServerSocket serverSocket, Map<String, TcpDataDisposeBuilder> clientMap, TcpDataDisposeBuilder builder) {
+        this.port = serverSocket.getLocalPort();
         this.serverSocket = serverSocket;
         this.clientMap = clientMap;
         this.builder = builder;
@@ -45,8 +52,9 @@ public class TcpServiceAcceptThread extends Thread {
                 TcpDataReceiveThread tcpDataReceiveThread = new TcpDataReceiveThread(address, clientMap, false);
                 tcpDataReceiveThread.start();
             } catch (IOException e) {
-                e.printStackTrace();
-                //todo 服务器已经断开
+                Log.e(TAG, "服务监听关闭", e);
+                //发送服务器监听关闭事件
+                EventBus.getDefault().post(new TcpServiceCloseEvent("0.0.0.0:" + port));
                 return;
             }
         }

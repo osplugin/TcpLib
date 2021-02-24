@@ -1,4 +1,4 @@
-package com.mjsoftking.tcplib.tcpthread;
+package com.mjsoftking.tcplib.thread;
 
 
 import com.mjsoftking.tcplib.dispose.TcpBaseDataDispose;

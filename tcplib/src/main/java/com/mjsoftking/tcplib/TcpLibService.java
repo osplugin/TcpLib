@@ -5,7 +5,11 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 
 import com.mjsoftking.tcplib.dispose.TcpDataDisposeBuilder;
-import com.mjsoftking.tcplib.tcpthread.TcpServiceAcceptThread;
+import com.mjsoftking.tcplib.event.service.TcpServiceBindEvent;
+import com.mjsoftking.tcplib.event.service.TcpServiceBindFailEvent;
+import com.mjsoftking.tcplib.thread.TcpServiceAcceptThread;
+
+import org.greenrobot.eventbus.EventBus;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -32,20 +36,22 @@ public class TcpLibService {
         return TCP_SERVICE;
     }
 
-    private TcpLibService() {
+    TcpLibService() {
         portMap = new ConcurrentHashMap<>();
         serverSocketMap = new ConcurrentHashMap<>();
     }
 
-    //服务
-//    private ServerSocket serverSocket;
-    //存储连接上的客户端
-    //存储连接上的客户端
+    /**
+     * 对绑定端口的服务端进行缓存
+     */
     private final Map<Integer, ServerSocket> serverSocketMap;
+    /**
+     * 对绑定端口的服务端的连接客户端进行缓存
+     */
     private final Map<Integer, Map<String, TcpDataDisposeBuilder>> portMap;
 
     public synchronized void bindService(int port, @NonNull TcpDataDisposeBuilder builder) {
-        bindService(port, 250, builder);
+        bindService(port, 255, builder);
     }
 
     public synchronized void bindService(int port, int backlog, @NonNull TcpDataDisposeBuilder builder) {
@@ -61,10 +67,15 @@ public class TcpLibService {
             portMap.put(port, new ConcurrentHashMap<>());
             serverSocketMap.put(port, serverSocket);
 
+            //发送服务器已监听事件
+            EventBus.getDefault().post(new TcpServiceBindEvent("0.0.0.0:" + port));
+
             //服务关闭时，接收方法就会被关闭
             new TcpServiceAcceptThread(serverSocket, portMap.get(port), builder).start();
         } catch (IOException e) {
             Log.e(TAG, "服务开启失败", e);
+            //发送服务器监听失败事件
+            EventBus.getDefault().post(new TcpServiceBindFailEvent("0.0.0.0:" + port));
         }
     }
 
