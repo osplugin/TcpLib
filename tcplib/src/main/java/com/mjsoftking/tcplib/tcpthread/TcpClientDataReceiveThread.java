@@ -2,6 +2,7 @@ package com.mjsoftking.tcplib.tcpthread;
 
 
 import com.mjsoftking.tcplib.dispose.TcpBaseDataDispose;
+import com.mjsoftking.tcplib.dispose.TcpDataDisposeBuilder;
 import com.mjsoftking.tcplib.event.client.TcpServiceDisconnectEvent;
 import com.mjsoftking.tcplib.list.ByteQueueList;
 
@@ -23,7 +24,7 @@ public class TcpClientDataReceiveThread extends Thread {
 
     private final Socket service;
     private final String address;
-    private final Map<String, Socket> serviceMap;
+    private final Map<String, TcpDataDisposeBuilder> serviceMap;
 
     private final ByteQueueList bufferQueue;
     private final TcpBaseDataDispose dataDispose;
@@ -33,11 +34,11 @@ public class TcpClientDataReceiveThread extends Thread {
     /**
      * 构造方法
      */
-    public TcpClientDataReceiveThread(Socket service, String address, Map<String, Socket> serviceMap, TcpBaseDataDispose dataDispose) {
-        this.service = service;
+    public TcpClientDataReceiveThread(String address, Map<String, TcpDataDisposeBuilder> serviceMap) {
+        this.service = serviceMap.get(address).getSocket();
         this.address = address;
         this.serviceMap = serviceMap;
-        this.dataDispose = dataDispose;
+        this.dataDispose = serviceMap.get(address).getDataDispose();
         this.bufferQueue = new ByteQueueList();
     }
 

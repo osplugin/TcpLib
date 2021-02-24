@@ -2,6 +2,7 @@ package com.mjsoftking.tcplib.tcpthread;
 
 
 import com.mjsoftking.tcplib.dispose.TcpBaseDataDispose;
+import com.mjsoftking.tcplib.dispose.TcpDataDisposeBuilder;
 import com.mjsoftking.tcplib.event.service.TcpClientDisconnectEvent;
 import com.mjsoftking.tcplib.list.ByteQueueList;
 
@@ -23,7 +24,7 @@ public class TcpServiceDataReceiveThread extends Thread {
 
     private final Socket client;
     private final String address;
-    private final Map<String, Socket> clientMap;
+    private final Map<String, TcpDataDisposeBuilder> clientMap;
 
     private final ByteQueueList bufferQueue;
     private final TcpBaseDataDispose dataDispose;
@@ -34,14 +35,12 @@ public class TcpServiceDataReceiveThread extends Thread {
      * 构造方法
      *
      * @param client
-     * @param clientMap
-     * @param dataDispose
      */
-    public TcpServiceDataReceiveThread(Socket client, String address, Map<String, Socket> clientMap, TcpBaseDataDispose dataDispose) {
+    public TcpServiceDataReceiveThread(Socket client, String address, Map<String, TcpDataDisposeBuilder> clientMap) {
         this.client = client;
         this.address = address;
         this.clientMap = clientMap;
-        this.dataDispose = dataDispose;
+        this.dataDispose = clientMap.get(address).getDataDispose();
         this.bufferQueue = new ByteQueueList();
     }
 
@@ -52,7 +51,6 @@ public class TcpServiceDataReceiveThread extends Thread {
                 byte[] buffer = new byte[1024];
                 int bufferLength = client.getInputStream().read(buffer);
                 if (bufferLength <= 0) {
-                    //todo 暂定
                     throw new IOException("客户端断开了");
                 }
                 byte[] dataBuffer = new byte[bufferLength];

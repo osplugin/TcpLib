@@ -2,16 +2,14 @@ package com.mjsoftking.tcplib;
 
 import android.util.Log;
 
-import com.mjsoftking.tcplib.dispose.TcpBaseDataDispose;
-import com.mjsoftking.tcplib.dispose.TcpBaseDataGenerate;
+import androidx.annotation.NonNull;
+
+import com.mjsoftking.tcplib.dispose.TcpDataDisposeBuilder;
 import com.mjsoftking.tcplib.tcpthread.TcpServiceAcceptThread;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.ServerSocket;
-import java.net.Socket;
-import java.nio.charset.Charset;
-import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -35,78 +33,36 @@ public class TcpLibService {
     }
 
     private TcpLibService() {
+        portMap = new ConcurrentHashMap<>();
+        serverSocketMap = new ConcurrentHashMap<>();
     }
 
     //服务
-    private ServerSocket serverSocket;
+//    private ServerSocket serverSocket;
     //存储连接上的客户端
-    private Map<String, Socket> clientMap;
-    //接收数据报文的处理接口
-    private TcpBaseDataDispose dataDispose;
-    //发送数据报文的生成接口
-    private TcpBaseDataGenerate dataGenerate;
+    //存储连接上的客户端
+    private final Map<Integer, ServerSocket> serverSocketMap;
+    private final Map<Integer, Map<String, TcpDataDisposeBuilder>> portMap;
 
-    //标记服务是否开启
-    private boolean isOpen;
-
-    public TcpBaseDataDispose getDataDispose() {
-        if (null == dataDispose) {
-            dataDispose = (clientAddress, bufferQueue) -> {
-                Log.e(TAG, "未实现数据解析器，使用默认规则");
-                byte[] b = new byte[bufferQueue.size()];
-                for (int i = 0; i < bufferQueue.size(); ++i) {
-                    b[i] = bufferQueue.get(i);
-                }
-                Log.e(TAG, "接收到数据: " + Arrays.toString(b));
-                bufferQueue.clear();
-            };
-        }
-        return dataDispose;
+    public synchronized void bindService(int port, @NonNull TcpDataDisposeBuilder builder) {
+        bindService(port, 250, builder);
     }
 
-    public TcpBaseDataGenerate getDataGenerate() {
-        if (null == dataGenerate) {
-            dataGenerate = content -> content.getBytes(Charset.forName("UTF-8"));
-        }
-        return dataGenerate;
-    }
-
-    /**
-     * 设置发送数据的报文格式
-     */
-    public TcpLibService setDataGenerate(TcpBaseDataGenerate dataGenerate) {
-        this.dataGenerate = dataGenerate;
-        return this;
-    }
-
-    /**
-     * 设置接收数据报文的解析规则
-     */
-    public TcpLibService setDataDispose(TcpBaseDataDispose dataDispose) {
-        this.dataDispose = dataDispose;
-        return this;
-    }
-
-    public synchronized void bindService(int port) {
-        bindService(port, 250);
-    }
-
-    public synchronized void bindService(int port, int backlog) {
-        if (isOpen) {
-            Log.w(TAG, "TCP服务正在运行，请勿多次开启");
+    public synchronized void bindService(int port, int backlog, @NonNull TcpDataDisposeBuilder builder) {
+        if (null != serverSocketMap.get(port)) {
+            Log.w(TAG, "TCP服务在端口: " + port + "下已经启动，请勿多次启动");
             return;
         }
         try {
-            serverSocket = new ServerSocket(port, backlog);
+            ServerSocket serverSocket = new ServerSocket(port, backlog);
             //超时不限制
             serverSocket.setSoTimeout(0);
             //线程安全的map
-            clientMap = new ConcurrentHashMap<>();
+            portMap.put(port, new ConcurrentHashMap<>());
+            serverSocketMap.put(port, serverSocket);
 
             //服务关闭时，接收方法就会被关闭
-            new TcpServiceAcceptThread(serverSocket, clientMap, getDataDispose()).start();
-
-            isOpen = true;
+            new TcpServiceAcceptThread(serverSocket, portMap.get(port), builder).start();
         } catch (IOException e) {
             Log.e(TAG, "服务开启失败", e);
         }
@@ -115,7 +71,8 @@ public class TcpLibService {
     /**
      * 关闭服务监听
      */
-    public synchronized void close() {
+    public synchronized void close(int port) {
+        ServerSocket serverSocket = serverSocketMap.get(port);
         if (null != serverSocket) {
             try {
                 serverSocket.close();
@@ -123,35 +80,59 @@ public class TcpLibService {
                 e.printStackTrace();
             }
         }
-        if (null != clientMap) {
-            clientMap.clear();
-            clientMap = null;
+        Map<String, TcpDataDisposeBuilder> map = portMap.get(port);
+        if (null != map) {
+            for (String address : map.keySet()) {
+                try {
+                    TcpDataDisposeBuilder builder = map.get(address);
+                    builder.getSocket().close();
+                    map.remove(address);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
         }
 
-        isOpen = false;
+        serverSocketMap.remove(port);
+        portMap.remove(port);
+    }
+
+    /**
+     * 关闭服务监听
+     */
+    public synchronized void closeAll() {
+        for (Integer port : serverSocketMap.keySet()) {
+            close(port);
+        }
     }
 
     /**
      * 向指定的客户端按照指定数据格式发送数据
      *
+     * @param port    指定服务器端口号，使用此端口启动的服务发起数据发送
      * @param address 在线客户端地址带端口号
-     * @param content   内容
+     * @param content 内容
      */
-    public void sendMessage(String address, String content) {
-        if (!isOpen) {
-            Log.w(TAG, "服务未启动");
+    public void sendMessage(int port, String address, String content) {
+        ServerSocket serverSocket = serverSocketMap.get(port);
+        if (null == serverSocket) {
+            Log.w(TAG, "服务端未启动");
             return;
         }
-        Socket client = clientMap.get(address);
-        if (null == client) {
-            Log.w(TAG, "指定客户端未连接");
+        Map<String, TcpDataDisposeBuilder> map = portMap.get(port);
+        if (null == map || map.isEmpty()) {
+            Log.w(TAG, "服务端没有客户端连接");
             return;
         }
-
+        TcpDataDisposeBuilder disposeBuilder = map.get(address);
+        if (null == disposeBuilder) {
+            Log.w(TAG, "指定客户端未连接服务器");
+            return;
+        }
         new Thread(() -> {
             try {
-                OutputStream outputStream = client.getOutputStream();
-                outputStream.write(getDataGenerate().generate(content));
+                OutputStream outputStream = disposeBuilder.getSocket().getOutputStream();
+                outputStream.write(disposeBuilder.getDataGenerate().generate(content));
                 outputStream.flush();
             } catch (IOException e) {
                 Log.e(TAG, "向指定客户端发送消息异常", e);
