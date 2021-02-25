@@ -55,7 +55,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if(v.equals(binding.send)){
 
             TcpLibService.getInstance()
-                    .bindService(30000, TcpDataBuilder.builder(new DataGenerate(), new DataDispose()));
+                    .bindService(30001, TcpDataBuilder.builder(new DataGenerate(), new DataDispose()));
 //            TcpLibClient.getInstance().sendMessage("192.168.1.245:8088", "192.168.1.245");
         } else if(v.equals(binding.close)){
 
