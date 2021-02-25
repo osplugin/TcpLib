@@ -127,17 +127,18 @@ public class TcpLibService {
     public void sendMessage(int port, String address, String content) {
         ServerSocket serverSocket = serverSocketMap.get(port);
         if (null == serverSocket) {
-            Log.w(TAG, "服务端未启动");
+            Log.w(TAG, "服务端: " + port + ", 服务端未启动");
             return;
         }
         Map<String, TcpDataBuilder> map = portMap.get(port);
         if (null == map || map.isEmpty()) {
-            Log.w(TAG, "服务端没有客户端连接");
+            Log.w(TAG, "服务端: " + port + ", 服务端没有客户端连接");
             return;
         }
         TcpDataBuilder disposeBuilder = map.get(address);
         if (null == disposeBuilder) {
-            Log.w(TAG, "指定客户端未连接服务器");
+            Log.w(TAG, "服务端: " + port + ", " +
+                    "客户端: " + address + ", 指定客户端未连接服务器");
             return;
         }
         new Thread(() -> {
@@ -146,9 +147,47 @@ public class TcpLibService {
                 outputStream.write(disposeBuilder.getDataGenerate().generate(content));
                 outputStream.flush();
             } catch (IOException e) {
-                Log.e(TAG, "向指定客户端发送消息异常", e);
+                Log.e(TAG, "服务端: " + port + ", " +
+                        "客户端: " + address + ", 向指定客户端发送消息异常", e);
             }
         }).start();
+    }
+
+    /**
+     * 通过指定服务器向与此服务器连接的所有客户端按照指定数据格式发送数据
+     *
+     * @param port    指定服务器端口号，使用此端口启动的服务发起数据发送
+     * @param content 内容
+     */
+    public void sendAllClientMessage(int port, String content) {
+        ServerSocket serverSocket = serverSocketMap.get(port);
+        if (null == serverSocket) {
+            Log.w(TAG, "服务端: " + port + ", 服务端未启动");
+            return;
+        }
+        Map<String, TcpDataBuilder> map = portMap.get(port);
+        if (null == map || map.isEmpty()) {
+            Log.w(TAG, "服务端: " + port + ", 服务端没有客户端连接");
+            return;
+        }
+        for (String address : map.keySet()) {
+            TcpDataBuilder disposeBuilder = map.get(address);
+            if (null == disposeBuilder) {
+                Log.w(TAG, "服务端: " + port + ", " +
+                        "客户端: " + address + ", 指定客户端未连接服务器");
+                return;
+            }
+            new Thread(() -> {
+                try {
+                    OutputStream outputStream = disposeBuilder.getSocket().getOutputStream();
+                    outputStream.write(disposeBuilder.getDataGenerate().generate(content));
+                    outputStream.flush();
+                } catch (IOException e) {
+                    Log.e(TAG, "服务端: " + port + ", " +
+                            "客户端: " + address + ", 向指定客户端发送消息异常", e);
+                }
+            }).start();
+        }
     }
 
 
