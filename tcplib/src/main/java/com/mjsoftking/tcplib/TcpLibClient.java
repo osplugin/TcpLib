@@ -104,7 +104,7 @@ public class TcpLibClient {
     public void sendMessage(String address, String content) {
         TcpDataBuilder disposeBuilder = SERVICE_MAP.get(address);
         if (null == disposeBuilder) {
-            Log.w(TAG, "服务端: " + address + ", 指定服务端未连接");
+            Log.w(TAG, "服务端端口: " + address + ", 指定服务端未连接");
             return;
         }
 
@@ -114,7 +114,7 @@ public class TcpLibClient {
                 outputStream.write(disposeBuilder.getDataGenerate().generate(content));
                 outputStream.flush();
             } catch (IOException e) {
-                Log.e(TAG, "服务端: " + address + ", 向指定服务端发送消息异常", e);
+                Log.e(TAG, "服务端端口: " + address + ", 向指定服务端发送消息异常", e);
             }
         }).start();
     }
