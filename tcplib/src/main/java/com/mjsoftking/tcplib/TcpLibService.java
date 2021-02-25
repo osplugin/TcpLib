@@ -99,7 +99,9 @@ public class TcpLibService {
             for (String address : map.keySet()) {
                 try {
                     TcpDataBuilder builder = map.get(address);
-                    builder.getSocket().close();
+                    if (builder != null && null != builder.getSocket()) {
+                        builder.getSocket().close();
+                    }
                     map.remove(address);
                 } catch (IOException e) {
                     e.printStackTrace();
