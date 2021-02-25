@@ -8,11 +8,11 @@ import com.mjsoftking.tcplib.event.TcpBaseEvent;
  * 作者：mjSoftKing
  * 时间：2021/02/22
  */
-public class TcpReceiveDataEvent extends TcpBaseEvent {
+public class TcpServiceReceiveDataEvent extends TcpBaseEvent {
 
     private String message;
 
-    public TcpReceiveDataEvent(int servicePort, String ipAddress, String message) {
+    public TcpServiceReceiveDataEvent(int servicePort, String ipAddress, String message) {
         super(servicePort, ipAddress);
         this.message = message;
     }

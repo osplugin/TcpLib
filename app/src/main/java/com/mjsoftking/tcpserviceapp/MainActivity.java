@@ -7,12 +7,13 @@ import android.view.View;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.databinding.DataBindingUtil;
 
+import com.mjsoftking.tcplib.TcpLibClient;
 import com.mjsoftking.tcplib.TcpLibService;
 import com.mjsoftking.tcplib.dispose.TcpDataBuilder;
 import com.mjsoftking.tcpserviceapp.databinding.ActivityMainBinding;
 import com.mjsoftking.tcpserviceapp.test.DataDispose;
 import com.mjsoftking.tcpserviceapp.test.DataGenerate;
-import com.mjsoftking.tcpserviceapp.test.event.TcpReceiveDataEvent;
+import com.mjsoftking.tcpserviceapp.test.event.TcpServiceReceiveDataEvent;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -37,10 +38,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //        TcpLibService.getInstance().close();
 
 
-//        TcpLibClient.getInstance()
-//                .setDataDispose(new DataDispose())
-//                .setDataGenerate(new DataGenerate())
-//                .connect("192.168.1.245", 8088);
+        TcpLibClient.getInstance()
+                .connect("192.168.1.245", 8088
+                        , TcpDataBuilder.builder(new DataGenerate(), new DataDispose()));
 
     }
 
@@ -65,8 +65,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
-    public void eventFun(TcpReceiveDataEvent event) {
-        Log.e(TAG, "客户端IP: " + event.getAddress() + "\n接收到数据: " + event.getMessage());
+    public void eventFun(TcpServiceReceiveDataEvent event) {
+        Log.e(TAG, "服务端端口: " + event.getServicePort() + ", 地址: " + event.getAddress() + ", 接收到数据: " + event.getMessage());
 
         TcpLibService.getInstance().sendMessage(event.getServicePort(), event.getAddress(), "shou dao xiao xi");
     }

@@ -5,8 +5,8 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 
 import com.mjsoftking.tcplib.dispose.TcpDataBuilder;
-import com.mjsoftking.tcplib.event.service.TcpServiceBindSuccessEvent;
 import com.mjsoftking.tcplib.event.service.TcpServiceBindFailEvent;
+import com.mjsoftking.tcplib.event.service.TcpServiceBindSuccessEvent;
 import com.mjsoftking.tcplib.thread.TcpServiceAcceptThread;
 
 import org.greenrobot.eventbus.EventBus;
@@ -14,6 +14,9 @@ import org.greenrobot.eventbus.EventBus;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.ServerSocket;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -118,6 +121,19 @@ public class TcpLibService {
     }
 
     /**
+     * 获取指定端口服务器是否在运行
+     *
+     * @param port 指定端口服务器
+     */
+    public boolean isRun(int port) {
+        ServerSocket serverSocket = serverSocketMap.get(port);
+        if (null == serverSocket) {
+            return false;
+        }
+        return !serverSocket.isClosed();
+    }
+
+    /**
      * 获取指定端口服务器的在线客户端数量
      *
      * @param port 指定端口服务器
@@ -132,6 +148,26 @@ public class TcpLibService {
             return 0;
         }
         return map.size();
+    }
+
+    /**
+     * 获取指定端口服务器的在线客户端
+     *
+     * @param port 指定端口服务器
+     * @return 在线客户端；null:服务器未启动，反之为在线客户端的ip:port形式列表，此内容可以直接由服务器向其发送数据
+     */
+    public List<String> getOnlineClient(int port) {
+        if (null == serverSocketMap.get(port)) {
+            return null;
+        }
+        List<String> addressList = new ArrayList<>();
+        Map<String, TcpDataBuilder> map = portMap.get(port);
+        if (null == map || map.isEmpty()) {
+            return addressList;
+        }
+        addressList.addAll(map.keySet());
+        Collections.sort(addressList, String::compareTo);
+        return addressList;
     }
 
     /**

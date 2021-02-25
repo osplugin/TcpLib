@@ -1,4 +1,4 @@
-package com.mjsoftking.tcpserviceapp.test;
+package com.mjsoftking.tcpserviceapp.test.dispose;
 
 import com.mjsoftking.tcplib.dispose.TcpBaseDataDispose;
 import com.mjsoftking.tcplib.list.ByteQueueList;
@@ -12,9 +12,9 @@ import org.greenrobot.eventbus.EventBus;
  * 作者：mjSoftKing
  * 时间：2021/02/22
  */
-public class DataDispose implements TcpBaseDataDispose {
+public class ServiceDataDispose implements TcpBaseDataDispose {
 
-    private final static String TAG = DataDispose.class.getSimpleName();
+    private final static String TAG = ServiceDataDispose.class.getSimpleName();
 
     @Override
     public void dispose(int servicePort, String clientAddress, ByteQueueList bufferQueue) {

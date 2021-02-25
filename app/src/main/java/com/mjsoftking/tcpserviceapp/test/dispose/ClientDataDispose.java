@@ -1,8 +1,8 @@
-package com.mjsoftking.tcpserviceapp.test;
+package com.mjsoftking.tcpserviceapp.test.dispose;
 
 import com.mjsoftking.tcplib.dispose.TcpBaseDataDispose;
 import com.mjsoftking.tcplib.list.ByteQueueList;
-import com.mjsoftking.tcpserviceapp.test.event.TcpServiceReceiveDataEvent;
+import com.mjsoftking.tcpserviceapp.test.event.TcpClientReceiveDataEvent;
 
 import org.greenrobot.eventbus.EventBus;
 
@@ -12,9 +12,9 @@ import org.greenrobot.eventbus.EventBus;
  * 作者：mjSoftKing
  * 时间：2021/02/22
  */
-public class DataDispose implements TcpBaseDataDispose {
+public class ClientDataDispose implements TcpBaseDataDispose {
 
-    private final static String TAG = DataDispose.class.getSimpleName();
+    private final static String TAG = ClientDataDispose.class.getSimpleName();
 
     @Override
     public void dispose(int servicePort, String clientAddress, ByteQueueList bufferQueue) {
@@ -22,7 +22,7 @@ public class DataDispose implements TcpBaseDataDispose {
         for (int i = 0; i < bufferQueue.size(); ++i) {
             b[i] = bufferQueue.get(i);
         }
-        EventBus.getDefault().post(new TcpServiceReceiveDataEvent(servicePort, clientAddress, new String(b)));
+        EventBus.getDefault().post(new TcpClientReceiveDataEvent(servicePort, clientAddress, new String(b)));
         bufferQueue.clear();
     }
 }
