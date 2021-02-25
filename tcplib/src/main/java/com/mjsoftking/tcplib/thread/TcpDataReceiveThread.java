@@ -4,7 +4,7 @@ package com.mjsoftking.tcplib.thread;
 import android.util.Log;
 
 import com.mjsoftking.tcplib.dispose.TcpBaseDataDispose;
-import com.mjsoftking.tcplib.dispose.TcpDataDisposeBuilder;
+import com.mjsoftking.tcplib.dispose.TcpDataBuilder;
 import com.mjsoftking.tcplib.event.client.TcpServiceDisconnectEvent;
 import com.mjsoftking.tcplib.event.service.TcpClientDisconnectEvent;
 import com.mjsoftking.tcplib.list.ByteQueueList;
@@ -27,7 +27,7 @@ public class TcpDataReceiveThread extends Thread {
 
     private final Socket client;
     private final String address;
-    private final Map<String, TcpDataDisposeBuilder> clientMap;
+    private final Map<String, TcpDataBuilder> clientMap;
 
     private final ByteQueueList bufferQueue;
     private final TcpBaseDataDispose dataDispose;
@@ -39,7 +39,7 @@ public class TcpDataReceiveThread extends Thread {
     /**
      * 构造方法
      */
-    public TcpDataReceiveThread(String address, Map<String, TcpDataDisposeBuilder> clientMap, boolean isClient) {
+    public TcpDataReceiveThread(String address, Map<String, TcpDataBuilder> clientMap, boolean isClient) {
         this.client = clientMap.get(address).getSocket();
         this.address = address;
         this.clientMap = clientMap;

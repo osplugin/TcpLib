@@ -14,11 +14,11 @@ import java.util.Arrays;
  * 作者：mjSoftKing
  * 时间：2021/02/24
  */
-public class TcpDataDisposeBuilder {
+public class TcpDataBuilder {
 
-    private final static String TAG = TcpDataDisposeBuilder.class.getSimpleName();
+    private final static String TAG = TcpDataBuilder.class.getSimpleName();
 
-    TcpDataDisposeBuilder(TcpBaseDataGenerate dataGenerate, TcpBaseDataDispose dataDispose) {
+    TcpDataBuilder(TcpBaseDataGenerate dataGenerate, TcpBaseDataDispose dataDispose) {
         this.dataGenerate = dataGenerate;
         this.dataDispose = dataDispose;
     }
@@ -63,7 +63,12 @@ public class TcpDataDisposeBuilder {
         return socket;
     }
 
-    public TcpDataDisposeBuilder setSocket(Socket socket) {
+    /**
+     * 客户端建立连接后/服务端接收到客户端连接后自动设置值，连接服务器/开启服务器时无需设置
+     *
+     * @param socket 客户端与服务器的连接/服务端接收到客户端的连接
+     */
+    public TcpDataBuilder setSocket(Socket socket) {
         this.socket = socket;
         return this;
     }
@@ -74,8 +79,8 @@ public class TcpDataDisposeBuilder {
      * @param dataGenerate 数据报文生成器
      * @param dataDispose  数据报文处理器
      */
-    public static TcpDataDisposeBuilder builder(TcpBaseDataGenerate dataGenerate, TcpBaseDataDispose dataDispose) {
-        return new TcpDataDisposeBuilder(dataGenerate, dataDispose);
+    public static TcpDataBuilder builder(TcpBaseDataGenerate dataGenerate, TcpBaseDataDispose dataDispose) {
+        return new TcpDataBuilder(dataGenerate, dataDispose);
     }
 
 

@@ -8,7 +8,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.databinding.DataBindingUtil;
 
 import com.mjsoftking.tcplib.TcpLibService;
-import com.mjsoftking.tcplib.dispose.TcpDataDisposeBuilder;
+import com.mjsoftking.tcplib.dispose.TcpDataBuilder;
 import com.mjsoftking.tcpserviceapp.databinding.ActivityMainBinding;
 import com.mjsoftking.tcpserviceapp.test.DataDispose;
 import com.mjsoftking.tcpserviceapp.test.DataGenerate;
@@ -32,7 +32,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
 
         TcpLibService.getInstance()
-                .bindService(30000, TcpDataDisposeBuilder.builder(new DataGenerate(), new DataDispose()));
+                .bindService(30000, TcpDataBuilder.builder(new DataGenerate(), new DataDispose()));
 //
 //        TcpLibService.getInstance().close();
 
@@ -55,7 +55,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if(v.equals(binding.send)){
 
             TcpLibService.getInstance()
-                    .bindService(30000, TcpDataDisposeBuilder.builder(new DataGenerate(), new DataDispose()));
+                    .bindService(30000, TcpDataBuilder.builder(new DataGenerate(), new DataDispose()));
 //            TcpLibClient.getInstance().sendMessage("192.168.1.245:8088", "192.168.1.245");
         } else if(v.equals(binding.close)){
 

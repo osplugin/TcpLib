@@ -4,8 +4,8 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 
-import com.mjsoftking.tcplib.dispose.TcpDataDisposeBuilder;
-import com.mjsoftking.tcplib.event.service.TcpServiceBindEvent;
+import com.mjsoftking.tcplib.dispose.TcpDataBuilder;
+import com.mjsoftking.tcplib.event.service.TcpServiceBindSuccessEvent;
 import com.mjsoftking.tcplib.event.service.TcpServiceBindFailEvent;
 import com.mjsoftking.tcplib.thread.TcpServiceAcceptThread;
 
@@ -48,13 +48,13 @@ public class TcpLibService {
     /**
      * 对绑定端口的服务端的连接客户端进行缓存
      */
-    private final Map<Integer, Map<String, TcpDataDisposeBuilder>> portMap;
+    private final Map<Integer, Map<String, TcpDataBuilder>> portMap;
 
-    public synchronized void bindService(int port, @NonNull TcpDataDisposeBuilder builder) {
+    public synchronized void bindService(int port, @NonNull TcpDataBuilder builder) {
         bindService(port, 255, builder);
     }
 
-    public synchronized void bindService(int port, int backlog, @NonNull TcpDataDisposeBuilder builder) {
+    public synchronized void bindService(int port, int backlog, @NonNull TcpDataBuilder builder) {
         if (null != serverSocketMap.get(port)) {
             Log.w(TAG, "TCP服务在端口: " + port + "下已经启动，请勿多次启动");
             return;
@@ -68,7 +68,7 @@ public class TcpLibService {
             serverSocketMap.put(port, serverSocket);
 
             //发送服务器已监听事件
-            EventBus.getDefault().post(new TcpServiceBindEvent("0.0.0.0:" + port));
+            EventBus.getDefault().post(new TcpServiceBindSuccessEvent("0.0.0.0:" + port));
 
             //服务关闭时，接收方法就会被关闭
             new TcpServiceAcceptThread(serverSocket, portMap.get(port), builder).start();
@@ -91,11 +91,11 @@ public class TcpLibService {
                 e.printStackTrace();
             }
         }
-        Map<String, TcpDataDisposeBuilder> map = portMap.get(port);
+        Map<String, TcpDataBuilder> map = portMap.get(port);
         if (null != map) {
             for (String address : map.keySet()) {
                 try {
-                    TcpDataDisposeBuilder builder = map.get(address);
+                    TcpDataBuilder builder = map.get(address);
                     builder.getSocket().close();
                     map.remove(address);
                 } catch (IOException e) {
@@ -130,12 +130,12 @@ public class TcpLibService {
             Log.w(TAG, "服务端未启动");
             return;
         }
-        Map<String, TcpDataDisposeBuilder> map = portMap.get(port);
+        Map<String, TcpDataBuilder> map = portMap.get(port);
         if (null == map || map.isEmpty()) {
             Log.w(TAG, "服务端没有客户端连接");
             return;
         }
-        TcpDataDisposeBuilder disposeBuilder = map.get(address);
+        TcpDataBuilder disposeBuilder = map.get(address);
         if (null == disposeBuilder) {
             Log.w(TAG, "指定客户端未连接服务器");
             return;

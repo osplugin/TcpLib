@@ -3,7 +3,7 @@ package com.mjsoftking.tcplib.thread;
 
 import android.util.Log;
 
-import com.mjsoftking.tcplib.dispose.TcpDataDisposeBuilder;
+import com.mjsoftking.tcplib.dispose.TcpDataBuilder;
 import com.mjsoftking.tcplib.event.service.TcpClientConnectEvent;
 import com.mjsoftking.tcplib.event.service.TcpServiceCloseEvent;
 
@@ -25,11 +25,11 @@ public class TcpServiceAcceptThread extends Thread {
     private final static String TAG = TcpServiceAcceptThread.class.getSimpleName();
 
     private final ServerSocket serverSocket;
-    private final Map<String, TcpDataDisposeBuilder> clientMap;
-    private final TcpDataDisposeBuilder builder;
+    private final Map<String, TcpDataBuilder> clientMap;
+    private final TcpDataBuilder builder;
     private final int port;
 
-    public TcpServiceAcceptThread(ServerSocket serverSocket, Map<String, TcpDataDisposeBuilder> clientMap, TcpDataDisposeBuilder builder) {
+    public TcpServiceAcceptThread(ServerSocket serverSocket, Map<String, TcpDataBuilder> clientMap, TcpDataBuilder builder) {
         this.port = serverSocket.getLocalPort();
         this.serverSocket = serverSocket;
         this.clientMap = clientMap;

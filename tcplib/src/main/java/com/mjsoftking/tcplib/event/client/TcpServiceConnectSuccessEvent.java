@@ -9,9 +9,9 @@ import com.mjsoftking.tcplib.event.TcpBaseEvent;
  * 作者：mjSoftKing
  * 时间：2021/02/22
  */
-public class TcpServiceConnectEvent extends TcpBaseEvent {
+public class TcpServiceConnectSuccessEvent extends TcpBaseEvent {
 
-    public TcpServiceConnectEvent(String address) {
+    public TcpServiceConnectSuccessEvent(String address) {
         super(address);
     }
 }

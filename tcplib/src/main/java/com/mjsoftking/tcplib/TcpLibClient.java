@@ -4,8 +4,8 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 
-import com.mjsoftking.tcplib.dispose.TcpDataDisposeBuilder;
-import com.mjsoftking.tcplib.event.client.TcpServiceConnectEvent;
+import com.mjsoftking.tcplib.dispose.TcpDataBuilder;
+import com.mjsoftking.tcplib.event.client.TcpServiceConnectSuccessEvent;
 import com.mjsoftking.tcplib.event.client.TcpServiceConnectFailEvent;
 import com.mjsoftking.tcplib.thread.TcpDataReceiveThread;
 
@@ -41,7 +41,7 @@ public class TcpLibClient {
     }
 
     //存储连接上的服务端和对应此服务器连接的发送和接收数据的处理规则
-    private final Map<String, TcpDataDisposeBuilder> SERVICE_MAP;
+    private final Map<String, TcpDataBuilder> SERVICE_MAP;
 
     /**
      * 发起连接
@@ -50,7 +50,7 @@ public class TcpLibClient {
      * @param port      端口号
      * @param builder   使用builder生成对发送数据生成和接收数据解析的实现
      */
-    public synchronized void connect(String ipAddress, int port, @NonNull TcpDataDisposeBuilder builder) {
+    public synchronized void connect(String ipAddress, int port, @NonNull TcpDataBuilder builder) {
         final String address = ipAddress + ":" + port;
         if (null != SERVICE_MAP.get(address)) {
             Log.w(TAG, "指定服务端已经连接上");
@@ -64,7 +64,7 @@ public class TcpLibClient {
                 //线程安全的map
                 SERVICE_MAP.put(address, builder.setSocket(socket));
                 //发送服务器已连接事件
-                EventBus.getDefault().post(new TcpServiceConnectEvent(address));
+                EventBus.getDefault().post(new TcpServiceConnectSuccessEvent(address));
 
                 //socket关闭时，接收方法就会被关闭
                 new TcpDataReceiveThread(address, SERVICE_MAP, true).start();
@@ -82,7 +82,7 @@ public class TcpLibClient {
      * @param address 服务端地址，ip:port 形式，如：0.0.0.0:30000
      */
     public synchronized void close(String address) {
-        TcpDataDisposeBuilder disposeBuilder = SERVICE_MAP.get(address);
+        TcpDataBuilder disposeBuilder = SERVICE_MAP.get(address);
         if (null == disposeBuilder) {
             return;
         }
@@ -102,7 +102,7 @@ public class TcpLibClient {
      * @param content 内容
      */
     public void sendMessage(String address, String content) {
-        TcpDataDisposeBuilder disposeBuilder = SERVICE_MAP.get(address);
+        TcpDataBuilder disposeBuilder = SERVICE_MAP.get(address);
         if (null == disposeBuilder) {
             Log.w(TAG, "指定服务端未连接");
             return;
