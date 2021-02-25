@@ -118,6 +118,23 @@ public class TcpLibService {
     }
 
     /**
+     * 获取指定端口服务器的在线客户端数量
+     *
+     * @param port 指定端口服务器
+     * @return 在线客户端数；-1:服务器未启动，反之为在线数量
+     */
+    public int getOnlineClientCount(int port) {
+        if (null == serverSocketMap.get(port)) {
+            return -1;
+        }
+        Map<String, TcpDataBuilder> map = portMap.get(port);
+        if (null == map || map.isEmpty()) {
+            return 0;
+        }
+        return map.size();
+    }
+
+    /**
      * 向指定的客户端按照指定数据格式发送数据
      *
      * @param port    指定服务器端口号，使用此端口启动的服务发起数据发送
