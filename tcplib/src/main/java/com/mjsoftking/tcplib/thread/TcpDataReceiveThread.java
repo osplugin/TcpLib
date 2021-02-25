@@ -25,6 +25,7 @@ public class TcpDataReceiveThread extends Thread {
 
     private final static String TAG = TcpDataReceiveThread.class.getSimpleName();
 
+    private final int servicePort;
     private final Socket client;
     private final String address;
     private final Map<String, TcpDataBuilder> clientMap;
@@ -39,7 +40,8 @@ public class TcpDataReceiveThread extends Thread {
     /**
      * 构造方法
      */
-    public TcpDataReceiveThread(String address, Map<String, TcpDataBuilder> clientMap, boolean isClient) {
+    public TcpDataReceiveThread(int servicePort, String address, Map<String, TcpDataBuilder> clientMap, boolean isClient) {
+        this.servicePort = servicePort;
         this.client = clientMap.get(address).getSocket();
         this.address = address;
         this.clientMap = clientMap;
@@ -63,7 +65,7 @@ public class TcpDataReceiveThread extends Thread {
 
                 if (null == dataDisposeThread || !dataDisposeThread.isAlive()) {
                     dataDisposeThread = null;
-                    dataDisposeThread = new TcpDataDisposeThread(address, bufferQueue, dataDispose);
+                    dataDisposeThread = new TcpDataDisposeThread(this.servicePort, address, bufferQueue, dataDispose);
                     dataDisposeThread.start();
                 }
             } catch (Exception e) {
@@ -72,10 +74,10 @@ public class TcpDataReceiveThread extends Thread {
                 clientMap.remove(address);
                 if (isClient) {
                     // 发送与服务器断开事件
-                    EventBus.getDefault().post(new TcpServiceDisconnectEvent(address));
+                    EventBus.getDefault().post(new TcpServiceDisconnectEvent(this.servicePort, address));
                 } else {
                     //发送客户端下线事件
-                    EventBus.getDefault().post(new TcpClientDisconnectEvent(address));
+                    EventBus.getDefault().post(new TcpClientDisconnectEvent(this.servicePort, address));
                 }
                 return;
             }

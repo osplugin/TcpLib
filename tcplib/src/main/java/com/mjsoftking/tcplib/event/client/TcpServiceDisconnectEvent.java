@@ -11,7 +11,7 @@ import com.mjsoftking.tcplib.event.TcpBaseEvent;
  */
 public class TcpServiceDisconnectEvent extends TcpBaseEvent {
 
-    public TcpServiceDisconnectEvent(String address) {
-        super(address);
+    public TcpServiceDisconnectEvent(int servicePort, String address) {
+        super(servicePort, address);
     }
 }

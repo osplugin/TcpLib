@@ -17,12 +17,12 @@ public class DataDispose implements TcpBaseDataDispose {
     private final static String TAG = DataDispose.class.getSimpleName();
 
     @Override
-    public void dispose(String clientAddress, ByteQueueList bufferQueue) {
+    public void dispose(int servicePort, String clientAddress, ByteQueueList bufferQueue) {
         byte[] b = new byte[bufferQueue.size()];
         for (int i = 0; i < bufferQueue.size(); ++i) {
             b[i] = bufferQueue.get(i);
         }
-        EventBus.getDefault().post(new TcpReceiveDataEvent(clientAddress, new String(b)));
+        EventBus.getDefault().post(new TcpReceiveDataEvent(servicePort, clientAddress, new String(b)));
         bufferQueue.clear();
     }
 }

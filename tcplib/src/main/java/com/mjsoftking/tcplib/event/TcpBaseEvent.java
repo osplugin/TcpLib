@@ -10,13 +10,22 @@ import java.io.Serializable;
  */
 public abstract class TcpBaseEvent implements Serializable {
 
+    protected int servicePort;
     protected String address;
 
-    public TcpBaseEvent(String address) {
+    public TcpBaseEvent(int servicePort, String address) {
+        this.servicePort = servicePort;
         this.address = address;
+    }
+
+    public TcpBaseEvent() {
     }
 
     public String getAddress() {
         return address;
+    }
+
+    public int getServicePort() {
+        return servicePort;
     }
 }

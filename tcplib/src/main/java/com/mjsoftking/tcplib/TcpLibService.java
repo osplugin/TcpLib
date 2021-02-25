@@ -68,14 +68,14 @@ public class TcpLibService {
             serverSocketMap.put(port, serverSocket);
 
             //发送服务器已监听事件
-            EventBus.getDefault().post(new TcpServiceBindSuccessEvent("0.0.0.0:" + port));
+            EventBus.getDefault().post(new TcpServiceBindSuccessEvent(port, "0.0.0.0:" + port));
 
             //服务关闭时，接收方法就会被关闭
             new TcpServiceAcceptThread(serverSocket, portMap.get(port), builder).start();
         } catch (IOException e) {
             Log.e(TAG, "服务开启失败", e);
             //发送服务器监听失败事件
-            EventBus.getDefault().post(new TcpServiceBindFailEvent("0.0.0.0:" + port));
+            EventBus.getDefault().post(new TcpServiceBindFailEvent(port, "0.0.0.0:" + port));
         }
     }
 

@@ -12,8 +12,8 @@ public class TcpReceiveDataEvent extends TcpBaseEvent {
 
     private String message;
 
-    public TcpReceiveDataEvent(String ipAddress, String message) {
-        super(ipAddress);
+    public TcpReceiveDataEvent(int servicePort, String ipAddress, String message) {
+        super(servicePort, ipAddress);
         this.message = message;
     }
 

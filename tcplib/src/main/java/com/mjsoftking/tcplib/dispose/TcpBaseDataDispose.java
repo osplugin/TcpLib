@@ -13,6 +13,15 @@ import com.mjsoftking.tcplib.list.ByteQueueList;
  */
 public interface TcpBaseDataDispose {
 
-    void dispose(String address, ByteQueueList bufferQueue);
+    /**
+     * 数据接收处理
+     *
+     * @param servicePort 服务器的端口，为服务端多开提供区分
+     * @param address     服务器/客户端的连接地址，ip:port 形式，如：0.0.0.0:30000
+     *                    服务器使用时，返回的是客户端的地址
+     *                    客户端使用时，返回的是服务器的地址
+     * @param bufferQueue 报文缓冲区，处理的报文需要移除队列
+     */
+    void dispose(int servicePort, String address, ByteQueueList bufferQueue);
 
 }

@@ -11,8 +11,7 @@ import com.mjsoftking.tcplib.event.TcpBaseEvent;
  */
 public class TcpServiceCloseEvent extends TcpBaseEvent {
 
-    public TcpServiceCloseEvent(String address) {
-        super(address);
+    public TcpServiceCloseEvent(int servicePort, String address) {
+        super(servicePort, address);
     }
-
 }

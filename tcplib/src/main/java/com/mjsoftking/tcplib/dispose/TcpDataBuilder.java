@@ -38,7 +38,7 @@ public class TcpDataBuilder {
 
     public TcpBaseDataDispose getDataDispose() {
         if (null == dataDispose) {
-            dataDispose = (address, bufferQueue) -> {
+            dataDispose = (servicePort, address, bufferQueue) -> {
                 Log.w(TAG, "未实现数据解析器，使用默认规则");
                 byte[] b = new byte[bufferQueue.size()];
                 for (int i = 0; i < b.length; ++i) {

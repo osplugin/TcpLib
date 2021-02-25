@@ -11,8 +11,7 @@ import com.mjsoftking.tcplib.event.TcpBaseEvent;
  */
 public class TcpServiceBindFailEvent extends TcpBaseEvent {
 
-    public TcpServiceBindFailEvent(String address) {
-        super(address);
+    public TcpServiceBindFailEvent(int servicePort, String address) {
+        super(servicePort, address);
     }
-
 }

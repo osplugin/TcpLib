@@ -64,14 +64,14 @@ public class TcpLibClient {
                 //线程安全的map
                 SERVICE_MAP.put(address, builder.setSocket(socket));
                 //发送服务器已连接事件
-                EventBus.getDefault().post(new TcpServiceConnectSuccessEvent(address));
+                EventBus.getDefault().post(new TcpServiceConnectSuccessEvent(port, address));
 
                 //socket关闭时，接收方法就会被关闭
-                new TcpDataReceiveThread(address, SERVICE_MAP, true).start();
+                new TcpDataReceiveThread(port, address, SERVICE_MAP, true).start();
             } catch (IOException e) {
                 Log.e(TAG, "服务器连接失败", e);
                 //发送服务器连接失败事件
-                EventBus.getDefault().post(new TcpServiceConnectFailEvent(address));
+                EventBus.getDefault().post(new TcpServiceConnectFailEvent(port, address));
             }
         }).start();
     }
@@ -96,7 +96,7 @@ public class TcpLibClient {
     }
 
     /**
-     * 向指定的服务端端按照指定数据格式发送数据
+     * 向指定的服务端按照指定数据格式发送数据
      *
      * @param address 服务端地址，ip:port 形式，如：0.0.0.0:30000
      * @param content 内容

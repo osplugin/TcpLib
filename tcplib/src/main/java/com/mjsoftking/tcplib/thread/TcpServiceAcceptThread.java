@@ -27,10 +27,10 @@ public class TcpServiceAcceptThread extends Thread {
     private final ServerSocket serverSocket;
     private final Map<String, TcpDataBuilder> clientMap;
     private final TcpDataBuilder builder;
-    private final int port;
+    private final int servicePort;
 
     public TcpServiceAcceptThread(ServerSocket serverSocket, Map<String, TcpDataBuilder> clientMap, TcpDataBuilder builder) {
-        this.port = serverSocket.getLocalPort();
+        this.servicePort = serverSocket.getLocalPort();
         this.serverSocket = serverSocket;
         this.clientMap = clientMap;
         this.builder = builder;
@@ -46,15 +46,15 @@ public class TcpServiceAcceptThread extends Thread {
                 clientMap.put(address, builder.setSocket(client));
 
                 //发送客户端上线事件
-                EventBus.getDefault().post(new TcpClientConnectEvent(address));
+                EventBus.getDefault().post(new TcpClientConnectEvent(this.servicePort, address));
 
                 //对客户端开启数据接收线程
-                TcpDataReceiveThread tcpDataReceiveThread = new TcpDataReceiveThread(address, clientMap, false);
+                TcpDataReceiveThread tcpDataReceiveThread = new TcpDataReceiveThread(this.servicePort, address, clientMap, false);
                 tcpDataReceiveThread.start();
             } catch (IOException e) {
                 Log.e(TAG, "服务监听关闭", e);
                 //发送服务器监听关闭事件
-                EventBus.getDefault().post(new TcpServiceCloseEvent("0.0.0.0:" + port));
+                EventBus.getDefault().post(new TcpServiceCloseEvent(this.servicePort, "0.0.0.0:" + servicePort));
                 return;
             }
         }

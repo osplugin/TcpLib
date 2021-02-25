@@ -11,8 +11,7 @@ import com.mjsoftking.tcplib.event.TcpBaseEvent;
  */
 public class TcpServiceBindSuccessEvent extends TcpBaseEvent {
 
-    public TcpServiceBindSuccessEvent(String address) {
-        super(address);
+    public TcpServiceBindSuccessEvent(int servicePort, String address) {
+        super(servicePort, address);
     }
-
 }

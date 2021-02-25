@@ -11,8 +11,7 @@ import com.mjsoftking.tcplib.event.TcpBaseEvent;
  */
 public class TcpClientConnectEvent extends TcpBaseEvent {
 
-    public TcpClientConnectEvent(String address) {
-        super(address);
+    public TcpClientConnectEvent(int servicePort, String address) {
+        super(servicePort, address);
     }
-
 }

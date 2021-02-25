@@ -52,12 +52,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onClick(View v) {
-        if(v.equals(binding.send)){
+        if (v.equals(binding.send)) {
 
             TcpLibService.getInstance()
                     .bindService(30001, TcpDataBuilder.builder(new DataGenerate(), new DataDispose()));
 //            TcpLibClient.getInstance().sendMessage("192.168.1.245:8088", "192.168.1.245");
-        } else if(v.equals(binding.close)){
+        } else if (v.equals(binding.close)) {
 
             TcpLibService.getInstance().close(30000);
 //            TcpLibClient.getInstance().close("192.168.1.245:8088");
@@ -68,7 +68,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void eventFun(TcpReceiveDataEvent event) {
         Log.e(TAG, "客户端IP: " + event.getAddress() + "\n接收到数据: " + event.getMessage());
 
-        TcpLibService.getInstance().sendMessage(30000, event.getAddress(), "shou dao xiao xi");
+        TcpLibService.getInstance().sendMessage(event.getServicePort(), event.getAddress(), "shou dao xiao xi");
     }
 
 }
