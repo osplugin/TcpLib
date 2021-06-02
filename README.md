@@ -3,35 +3,166 @@
 #### 介绍
 安卓 Java tcp提炼封装工具,仍在开发中，目前已支持一台手机建立多个端口监听服务器且使用各自的报文处理规则，一个手机对多个端口服务器进行连接且使用各自的报文处理规则
 
-#### 软件架构
-软件架构说明
+#### 一、项目介绍
+1. APP 使用示例项目，libs下含有以编译最新的aar资源。
+2. TcpLib arr资源项目，需要引入的资源包项目。
 
+#### 二、工程引入工具包
+下载项目，可以在APP项目的libs文件下找到*.aar文件（已编译为最新版），选择其中一个引入自己的工程
 
-#### 安装教程
+引入微信工具包及微信SDK
+```
+dependencies {
+   //引入wxlibrary.aar资源
+   implementation files('libs/tcplib.aar')
+   //eventbus，引入后你的项目将支持EventBus，EventBus是一种用于Android的事件发布-订阅总线，替代广播的传值方式，使用方法可以度娘查询。
+   implementation 'org.greenrobot:eventbus:3.2.0'
+   ...
+}
+```
+#### 三、配置debug模式
+在application下注册debug模式，可以打印更多log日志。
 
-1.  xxxx
-2.  xxxx
-3.  xxxx
+```
+ //配置debug模式
+ TcpLibConfig.getInstance()
+           .setDebugMode(BuildConfig.DEBUG);
+```
+#### 四、重写服务报文接收及发送处理
+ **- 接收报文处理** 
 
-#### 使用说明
+简单示例，也可以定义带报文头、报文尾、数据验证等的处理方式，具体规则完全由自己定义。bufferQueue处理一帧报文后需要在队列中移除这一帧报文数据。
+必须实现接口 **TcpBaseDataDispose** 
 
-1.  xxxx
-2.  xxxx
-3.  xxxx
+```
+public class DataDispose implements TcpBaseDataDispose {
 
-#### 参与贡献
+    private final static String TAG = DataDispose.class.getSimpleName();
 
-1.  Fork 本仓库
-2.  新建 Feat_xxx 分支
-3.  提交代码
-4.  新建 Pull Request
+    @Override
+    public void dispose(ByteQueueList bufferQueue, int servicePort, String clientAddress) {
+        byte[] b = new byte[bufferQueue.size()];
+        for (int i = 0; i < bufferQueue.size(); ++i) {
+            b[i] = bufferQueue.get(i);
+        }
 
+        //todo 按照解析后的指令分发事件
+        EventBus.getDefault().post(new TcpServiceReceiveDataEvent(servicePort, clientAddress, new String(b)));
+        bufferQueue.clear();
+    }
+}
+```
+ **- 发送报文处理** 
 
-#### 特技
+简单示例，也可以定义带报文头、报文尾、数据验证等的处理方式，具体规则完全由自己定义。
+必须实现接口 **TcpBaseDataGenerate** 
 
-1.  使用 Readme\_XXX.md 来支持不同的语言，例如 Readme\_en.md, Readme\_zh.md 111
-2.  Gitee 官方博客 [blog.gitee.com](https://blog.gitee.com)
-3.  你可以 [https://gitee.com/explore](https://gitee.com/explore) 这个地址来了解 Gitee 上的优秀开源项目11
-4.  [GVP](https://gitee.com/gvp) 全称是 Gitee 最有价值开源项目，是综合评定出的优秀开源项目
-5.  Gitee 官方提供的使用手册 [https://gitee.com/help](https://gitee.com/help)11
-6.  Gitee 封面人物是一档用来展示 Gitee 会员风采的栏目 [https://gitee.com/gitee-stars/](https://gitee.com/gitee-stars/)
+```
+public class DataGenerate implements TcpBaseDataGenerate {
+
+    @Override
+    public byte[] generate(String content) {
+        return content.getBytes(Charset.forName("UTF-8"));
+    }
+
+    @Override
+    public byte[] generate(byte[] contentBytes) {
+        return contentBytes;
+    }
+}
+```
+#### 五、服务的启动与关闭
+ **- 服务启动，需提供启动的端口号** 
+
+```
+int port = 50000;
+TcpLibService.getInstance()
+                .bindService(port, TcpDataBuilder.builder(new DataGenerate(), new DataDispose()));
+```
+
+ **- 服务关闭，关闭时需提供启动的端口号** 
+
+```
+int port = 50000;
+TcpLibService.getInstance().close(port);
+```
+#### 六、服务的启动、客户端连接的事件处理
+
+ **在任意对象下，创建实例时，以下以activity为例** 
+
+- 注册EventBus
+```
+ @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        EventBus.getDefault().register(this);
+        ...
+
+    }
+```
+- 接收EventBus事件
+```
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void eventFun(TcpBaseEvent et) {
+        //todo 自行处理的报文数据分发事件，
+        if (et instanceof TcpServiceReceiveDataEvent) {
+            TcpServiceReceiveDataEvent event = (TcpServiceReceiveDataEvent) et;
+            Log.e(TAG, "服务端端口: " + event.getServicePort() + ", 地址: " + event.getAddress() + ", 接收到数据: " + event.getMessage());
+
+            TcpLibService.getInstance().sendMessage(event.getServicePort(), event.getAddress(), "shou dao xiao xi");
+        }
+        //todo 服务启动成功
+        else if (et instanceof TcpServiceBindSuccessEvent) {
+            Log.w(TAG, String.format("服务器启动成功，端口：%d", et.getServicePort()));
+        }
+        //todo 服务启动失败
+        else if (et instanceof TcpServiceBindFailEvent) {
+            Log.w(TAG, String.format("服务器启动失败，端口：%d", et.getServicePort()));
+        }
+        //todo 服务关闭
+        else if (et instanceof TcpServiceCloseEvent) {
+            Log.w(TAG, String.format("服务器已关闭，端口：%d", et.getServicePort()));
+        }
+        //todo 客户端上线
+        else if (et instanceof TcpClientConnectEvent) {
+            Log.w(TAG, String.format("新客户端连接，服务端口：%d, 客户端地址：%s", et.getServicePort(), et.getAddress()));
+        }
+        //todo 客户端下线
+        else if (et instanceof TcpClientDisconnectEvent) {
+            Log.w(TAG, String.format("客户端连接断开，服务端口：%d, 客户端地址：%s", et.getServicePort(), et.getAddress()));
+        }
+    }
+```
+- 注销EventBus
+
+```
+ @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        EventBus.getDefault().unregister(this);
+    }
+```
+
+#### 七、服务端向客户端发送消息
+
+```
+int port = 50000;//服务端启动服务的端口
+String address = "127.0.0.1:1233"; //服务端收到客户端连接事件时的地址 （ip:port）形式。
+String content = "数据";//此参数会进入TcpBaseDataGenerate 实现内，根据具体业务定义数据类型
+TcpLibService.getInstance().sendMessage(port, address, content);
+```
+#### 八、服务端其他api
+
+TcpLibService提供以下api
+```
+获取指定端口服务器是否在运行
+boolean isRun(int port)｛｝
+```
+```
+获取指定端口服务器的在线客户端数量，在线客户端数；-1:服务器未启动，反之为在线数量
+int getOnlineClientCount(int port)｛｝
+```
+```
+获取指定端口服务器的在线客户端，返回：null:服务器未启动，反之为在线客户端的ip:port形式列表，此内容可以直接在服务器向其发送数据
+List<String> getOnlineClient(int port)｛｝
+```
