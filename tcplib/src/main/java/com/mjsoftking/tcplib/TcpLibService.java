@@ -31,19 +31,6 @@ public class TcpLibService {
     private final static String TAG = TcpLibService.class.getSimpleName();
 
     private static TcpLibService TCP_SERVICE;
-
-    public static synchronized TcpLibService getInstance() {
-        if (null == TCP_SERVICE) {
-            TCP_SERVICE = new TcpLibService();
-        }
-        return TCP_SERVICE;
-    }
-
-    TcpLibService() {
-        portMap = new ConcurrentHashMap<>();
-        serverSocketMap = new ConcurrentHashMap<>();
-    }
-
     /**
      * 对绑定端口的服务端进行缓存
      */
@@ -53,13 +40,33 @@ public class TcpLibService {
      */
     private final Map<Integer, Map<String, TcpDataBuilder>> portMap;
 
+    TcpLibService() {
+        portMap = new ConcurrentHashMap<>();
+        serverSocketMap = new ConcurrentHashMap<>();
+    }
+
+    public static synchronized TcpLibService getInstance() {
+        if (null == TCP_SERVICE) {
+            TCP_SERVICE = new TcpLibService();
+        }
+        return TCP_SERVICE;
+    }
+
+    private static boolean debugMode;
+
+    public static void setDebugMode(boolean debugMode) {
+        TcpLibService.debugMode = debugMode;
+    }
+
     public synchronized void bindService(int port, @NonNull TcpDataBuilder builder) {
         bindService(port, 255, builder);
     }
 
     public synchronized void bindService(int port, int backlog, @NonNull TcpDataBuilder builder) {
         if (null != serverSocketMap.get(port)) {
-            Log.w(TAG, "TCP服务在端口: " + port + "下已经启动，请勿多次启动");
+            if(debugMode) {
+                Log.w(TAG, "TCP服务在端口: " + port + "下已经启动，请勿多次启动");
+            }
             return;
         }
         try {
@@ -76,7 +83,9 @@ public class TcpLibService {
             //服务关闭时，接收方法就会被关闭
             new TcpServiceAcceptThread(serverSocket, portMap.get(port), builder).start();
         } catch (IOException e) {
-            Log.e(TAG, "服务开启失败", e);
+            if(debugMode) {
+                Log.e(TAG, "服务开启失败", e);
+            }
             //发送服务器监听失败事件
             EventBus.getDefault().post(new TcpServiceBindFailEvent(port, "0.0.0.0:" + port));
         }
@@ -175,6 +184,95 @@ public class TcpLibService {
     /**
      * 向指定的客户端按照指定数据格式发送数据
      *
+     * @param port         指定服务器端口号，使用此端口启动的服务发起数据发送
+     * @param address      在线客户端地址带端口号
+     * @param contentBytes 内容
+     */
+    public void sendMessage(int port, String address, byte[] contentBytes) {
+        ServerSocket serverSocket = serverSocketMap.get(port);
+        if (null == serverSocket) {
+            if(debugMode) {
+                Log.w(TAG, "服务端端口: " + port + ", 服务端未启动");
+            }
+            return;
+        }
+        Map<String, TcpDataBuilder> map = portMap.get(port);
+        if (null == map || map.isEmpty()) {
+            if(debugMode) {
+                Log.w(TAG, "服务端端口: " + port + ", 服务端没有客户端连接");
+            }
+            return;
+        }
+        TcpDataBuilder disposeBuilder = map.get(address);
+        if (null == disposeBuilder) {
+            if(debugMode) {
+                Log.w(TAG, "服务端端口: " + port + ", " +
+                        "客户端: " + address + ", 指定客户端未连接服务器");
+            }
+            return;
+        }
+        new Thread(() -> {
+            try {
+                OutputStream outputStream = disposeBuilder.getSocket().getOutputStream();
+                outputStream.write(disposeBuilder.getDataGenerate().generate(contentBytes));
+                outputStream.flush();
+            } catch (IOException e) {
+                if(debugMode) {
+                    Log.e(TAG, "服务端端口: " + port + ", " +
+                            "客户端: " + address + ", 向指定客户端发送消息异常", e);
+                }
+            }
+        }).start();
+    }
+
+    /**
+     * 通过指定服务器向与此服务器连接的所有客户端按照指定数据格式发送数据
+     *
+     * @param port         指定服务器端口号，使用此端口启动的服务发起数据发送
+     * @param contentBytes 内容
+     */
+    public void sendAllClientMessage(int port, byte[] contentBytes) {
+        ServerSocket serverSocket = serverSocketMap.get(port);
+        if (null == serverSocket) {
+            if(debugMode) {
+                Log.w(TAG, "服务端端口: " + port + ", 服务端未启动");
+            }
+            return;
+        }
+        Map<String, TcpDataBuilder> map = portMap.get(port);
+        if (null == map || map.isEmpty()) {
+            if(debugMode) {
+                Log.w(TAG, "服务端端口: " + port + ", 服务端没有客户端连接");
+            }
+            return;
+        }
+        for (String address : map.keySet()) {
+            TcpDataBuilder disposeBuilder = map.get(address);
+            if (null == disposeBuilder) {
+                if(debugMode) {
+                    Log.w(TAG, "服务端端口: " + port + ", " +
+                            "客户端: " + address + ", 指定客户端未连接服务器");
+                }
+                return;
+            }
+            new Thread(() -> {
+                try {
+                    OutputStream outputStream = disposeBuilder.getSocket().getOutputStream();
+                    outputStream.write(disposeBuilder.getDataGenerate().generate(contentBytes));
+                    outputStream.flush();
+                } catch (IOException e) {
+                    if(debugMode) {
+                        Log.e(TAG, "服务端端口: " + port + ", " +
+                                "客户端: " + address + ", 向指定客户端发送消息异常", e);
+                    }
+                }
+            }).start();
+        }
+    }
+
+    /**
+     * 向指定的客户端按照指定数据格式发送数据
+     *
      * @param port    指定服务器端口号，使用此端口启动的服务发起数据发送
      * @param address 在线客户端地址带端口号
      * @param content 内容
@@ -182,18 +280,24 @@ public class TcpLibService {
     public void sendMessage(int port, String address, String content) {
         ServerSocket serverSocket = serverSocketMap.get(port);
         if (null == serverSocket) {
-            Log.w(TAG, "服务端端口: " + port + ", 服务端未启动");
+            if(debugMode) {
+                Log.w(TAG, "服务端端口: " + port + ", 服务端未启动");
+            }
             return;
         }
         Map<String, TcpDataBuilder> map = portMap.get(port);
         if (null == map || map.isEmpty()) {
-            Log.w(TAG, "服务端端口: " + port + ", 服务端没有客户端连接");
+            if(debugMode) {
+                Log.w(TAG, "服务端端口: " + port + ", 服务端没有客户端连接");
+            }
             return;
         }
         TcpDataBuilder disposeBuilder = map.get(address);
         if (null == disposeBuilder) {
-            Log.w(TAG, "服务端端口: " + port + ", " +
-                    "客户端: " + address + ", 指定客户端未连接服务器");
+            if(debugMode) {
+                Log.w(TAG, "服务端端口: " + port + ", " +
+                        "客户端: " + address + ", 指定客户端未连接服务器");
+            }
             return;
         }
         new Thread(() -> {
@@ -202,8 +306,10 @@ public class TcpLibService {
                 outputStream.write(disposeBuilder.getDataGenerate().generate(content));
                 outputStream.flush();
             } catch (IOException e) {
-                Log.e(TAG, "服务端端口: " + port + ", " +
-                        "客户端: " + address + ", 向指定客户端发送消息异常", e);
+                if(debugMode) {
+                    Log.e(TAG, "服务端端口: " + port + ", " +
+                            "客户端: " + address + ", 向指定客户端发送消息异常", e);
+                }
             }
         }).start();
     }
@@ -217,19 +323,25 @@ public class TcpLibService {
     public void sendAllClientMessage(int port, String content) {
         ServerSocket serverSocket = serverSocketMap.get(port);
         if (null == serverSocket) {
-            Log.w(TAG, "服务端端口: " + port + ", 服务端未启动");
+            if(debugMode) {
+                Log.w(TAG, "服务端端口: " + port + ", 服务端未启动");
+            }
             return;
         }
         Map<String, TcpDataBuilder> map = portMap.get(port);
         if (null == map || map.isEmpty()) {
-            Log.w(TAG, "服务端端口: " + port + ", 服务端没有客户端连接");
+            if(debugMode) {
+                Log.w(TAG, "服务端端口: " + port + ", 服务端没有客户端连接");
+            }
             return;
         }
         for (String address : map.keySet()) {
             TcpDataBuilder disposeBuilder = map.get(address);
             if (null == disposeBuilder) {
-                Log.w(TAG, "服务端端口: " + port + ", " +
-                        "客户端: " + address + ", 指定客户端未连接服务器");
+                if(debugMode) {
+                    Log.w(TAG, "服务端端口: " + port + ", " +
+                            "客户端: " + address + ", 指定客户端未连接服务器");
+                }
                 return;
             }
             new Thread(() -> {
@@ -238,8 +350,10 @@ public class TcpLibService {
                     outputStream.write(disposeBuilder.getDataGenerate().generate(content));
                     outputStream.flush();
                 } catch (IOException e) {
-                    Log.e(TAG, "服务端端口: " + port + ", " +
-                            "客户端: " + address + ", 向指定客户端发送消息异常", e);
+                    if(debugMode) {
+                        Log.e(TAG, "服务端端口: " + port + ", " +
+                                "客户端: " + address + ", 向指定客户端发送消息异常", e);
+                    }
                 }
             }).start();
         }

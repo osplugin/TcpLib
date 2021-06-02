@@ -10,6 +10,13 @@ package com.mjsoftking.tcplib.dispose;
  */
 public interface TcpBaseDataGenerate {
 
+    /**
+     * 根据数据文本转成byte数组，并添加验证位、数据头、数据尾
+     */
     byte[] generate(String content);
 
+    /**
+     * 根据数据byte，添加验证位、数据头、数据尾
+     */
+    byte[] generate(byte[] contentBytes);
 }

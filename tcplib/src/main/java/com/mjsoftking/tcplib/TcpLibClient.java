@@ -43,6 +43,12 @@ public class TcpLibClient {
     //存储连接上的服务端和对应此服务器连接的发送和接收数据的处理规则
     private final Map<String, TcpDataBuilder> SERVICE_MAP;
 
+    private static boolean debugMode;
+
+    public static void setDebugMode(boolean debugMode) {
+        TcpLibClient.debugMode = debugMode;
+    }
+
     /**
      * 发起连接
      *
@@ -53,7 +59,9 @@ public class TcpLibClient {
     public synchronized void connect(String ipAddress, int port, @NonNull TcpDataBuilder builder) {
         final String address = ipAddress + ":" + port;
         if (null != SERVICE_MAP.get(address)) {
-            Log.w(TAG, "指定服务端已经连接上");
+            if(debugMode) {
+                Log.w(TAG, "指定服务端已经连接上");
+            }
             return;
         }
         new Thread(() -> {
@@ -69,7 +77,9 @@ public class TcpLibClient {
                 //socket关闭时，接收方法就会被关闭
                 new TcpDataReceiveThread(port, address, SERVICE_MAP, true).start();
             } catch (IOException e) {
-                Log.e(TAG, "服务器连接失败", e);
+                if(debugMode) {
+                    Log.e(TAG, "服务器连接失败", e);
+                }
                 //发送服务器连接失败事件
                 EventBus.getDefault().post(new TcpServiceConnectFailEvent(port, address));
             }
@@ -104,7 +114,9 @@ public class TcpLibClient {
     public void sendMessage(String address, String content) {
         TcpDataBuilder disposeBuilder = SERVICE_MAP.get(address);
         if (null == disposeBuilder) {
-            Log.w(TAG, "服务端端口: " + address + ", 指定服务端未连接");
+            if(debugMode) {
+                Log.w(TAG, "服务端端口: " + address + ", 指定服务端未连接");
+            }
             return;
         }
 
@@ -114,7 +126,9 @@ public class TcpLibClient {
                 outputStream.write(disposeBuilder.getDataGenerate().generate(content));
                 outputStream.flush();
             } catch (IOException e) {
-                Log.e(TAG, "服务端端口: " + address + ", 向指定服务端发送消息异常", e);
+                if(debugMode) {
+                    Log.e(TAG, "服务端端口: " + address + ", 向指定服务端发送消息异常", e);
+                }
             }
         }).start();
     }
@@ -131,4 +145,43 @@ public class TcpLibClient {
         }
     }
 
+    /**
+     * 向指定的服务端按照指定数据格式发送数据
+     *
+     * @param address 服务端地址，ip:port 形式，如：0.0.0.0:30000
+     * @param content 内容
+     */
+    public void sendMessage(String address, byte[] content) {
+        TcpDataBuilder disposeBuilder = SERVICE_MAP.get(address);
+        if (null == disposeBuilder) {
+            if(debugMode) {
+                Log.w(TAG, "服务端端口: " + address + ", 指定服务端未连接");
+            }
+            return;
+        }
+
+        new Thread(() -> {
+            try {
+                OutputStream outputStream = disposeBuilder.getSocket().getOutputStream();
+                outputStream.write(disposeBuilder.getDataGenerate().generate(content));
+                outputStream.flush();
+            } catch (IOException e) {
+                if(debugMode) {
+                    Log.e(TAG, "服务端端口: " + address + ", 向指定服务端发送消息异常", e);
+                }
+            }
+        }).start();
+    }
+
+
+    /**
+     * 向所有已连接的服务端按照指定数据格式发送数据
+     *
+     * @param content 内容
+     */
+    public void sendAllMessage(byte[] content) {
+        for (String address : SERVICE_MAP.keySet()) {
+            sendMessage(address, content);
+        }
+    }
 }

@@ -17,4 +17,9 @@ public class DataGenerate implements TcpBaseDataGenerate {
     public byte[] generate(String content) {
         return content.getBytes(Charset.forName("UTF-8"));
     }
+
+    @Override
+    public byte[] generate(byte[] contentBytes) {
+        return contentBytes;
+    }
 }
