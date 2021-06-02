@@ -17,17 +17,10 @@ import java.util.Arrays;
 public class TcpDataBuilder {
 
     private final static String TAG = TcpDataBuilder.class.getSimpleName();
-
-    TcpDataBuilder(TcpBaseDataGenerate dataGenerate, TcpBaseDataDispose dataDispose) {
-        this.dataGenerate = dataGenerate;
-        this.dataDispose = dataDispose;
-    }
-
     //接收数据报文的处理接口
     private TcpBaseDataDispose dataDispose;
     //发送数据报文的生成接口
     private TcpBaseDataGenerate dataGenerate;
-
     /**
      * 客户端隧道
      * <p>
@@ -36,9 +29,24 @@ public class TcpDataBuilder {
      */
     private Socket socket;
 
+    TcpDataBuilder(TcpBaseDataGenerate dataGenerate, TcpBaseDataDispose dataDispose) {
+        this.dataGenerate = dataGenerate;
+        this.dataDispose = dataDispose;
+    }
+
+    /**
+     * 设置发送和解析数据报文的处理器
+     *
+     * @param dataGenerate 数据报文生成器
+     * @param dataDispose  数据报文处理器
+     */
+    public static TcpDataBuilder builder(TcpBaseDataGenerate dataGenerate, TcpBaseDataDispose dataDispose) {
+        return new TcpDataBuilder(dataGenerate, dataDispose);
+    }
+
     public TcpBaseDataDispose getDataDispose() {
         if (null == dataDispose) {
-            dataDispose = (servicePort, address, bufferQueue) -> {
+            dataDispose = (bufferQueue, servicePort, address) -> {
                 Log.w(TAG, "未实现数据解析器，使用默认规则");
                 byte[] b = new byte[bufferQueue.size()];
                 for (int i = 0; i < b.length; ++i) {
@@ -81,16 +89,6 @@ public class TcpDataBuilder {
     public TcpDataBuilder setSocket(Socket socket) {
         this.socket = socket;
         return this;
-    }
-
-    /**
-     * 设置发送和解析数据报文的处理器
-     *
-     * @param dataGenerate 数据报文生成器
-     * @param dataDispose  数据报文处理器
-     */
-    public static TcpDataBuilder builder(TcpBaseDataGenerate dataGenerate, TcpBaseDataDispose dataDispose) {
-        return new TcpDataBuilder(dataGenerate, dataDispose);
     }
 
 

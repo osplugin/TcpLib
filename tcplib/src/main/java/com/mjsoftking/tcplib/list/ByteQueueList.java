@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
- * 用途：
+ * 用途：线程安全的 byte 列表
  * <p>
  * 作者：mjSoftKing
  * 时间：2021/02/23

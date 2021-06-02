@@ -3,6 +3,7 @@ package com.mjsoftking.tcplib.thread;
 
 import android.util.Log;
 
+import com.mjsoftking.tcplib.TcpLibConfig;
 import com.mjsoftking.tcplib.dispose.TcpBaseDataDispose;
 import com.mjsoftking.tcplib.dispose.TcpDataBuilder;
 import com.mjsoftking.tcplib.event.client.TcpServiceDisconnectEvent;
@@ -54,10 +55,10 @@ public class TcpDataReceiveThread extends Thread {
     public void run() {
         while (true) {
             try {
-                byte[] buffer = new byte[100 * 1024];
+                byte[] buffer = new byte[1024 * 1024];
                 int bufferLength = client.getInputStream().read(buffer);
                 if (bufferLength <= 0) {
-                    throw new IOException("客户端断开了");
+                    throw new IOException("连接中断");
                 }
                 byte[] dataBuffer = new byte[bufferLength];
                 System.arraycopy(buffer, 0, dataBuffer, 0, bufferLength);
@@ -69,7 +70,15 @@ public class TcpDataReceiveThread extends Thread {
                     dataDisposeThread.start();
                 }
             } catch (Exception e) {
-                Log.w(TAG, "客户端连接中断", e);
+                if ("连接中断".equals(e.getMessage())) {
+                    if (TcpLibConfig.getInstance().isDebugMode()) {
+                        Log.w(TAG, "连接中断," + (isClient ? "服务器地址：" : "客户端器地址：") + address);
+                    }
+                } else {
+                    if (TcpLibConfig.getInstance().isDebugMode()) {
+                        Log.e(TAG, e.getMessage(), e);
+                    }
+                }
                 //客户端已经断开
                 clientMap.remove(address);
                 if (isClient) {

@@ -7,9 +7,15 @@ import android.view.View;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.databinding.DataBindingUtil;
 
-import com.mjsoftking.tcplib.TcpLibClient;
+import com.mjsoftking.tcplib.TcpLibConfig;
 import com.mjsoftking.tcplib.TcpLibService;
 import com.mjsoftking.tcplib.dispose.TcpDataBuilder;
+import com.mjsoftking.tcplib.event.TcpBaseEvent;
+import com.mjsoftking.tcplib.event.service.TcpClientConnectEvent;
+import com.mjsoftking.tcplib.event.service.TcpClientDisconnectEvent;
+import com.mjsoftking.tcplib.event.service.TcpServiceBindFailEvent;
+import com.mjsoftking.tcplib.event.service.TcpServiceBindSuccessEvent;
+import com.mjsoftking.tcplib.event.service.TcpServiceCloseEvent;
 import com.mjsoftking.tcpserviceapp.databinding.ActivityMainBinding;
 import com.mjsoftking.tcpserviceapp.test.DataDispose;
 import com.mjsoftking.tcpserviceapp.test.DataGenerate;
@@ -24,6 +30,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private ActivityMainBinding binding;
 
+    private final int port = 50000;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -31,16 +39,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         binding.setClick(this);
         EventBus.getDefault().register(this);
 
-
+        //配置debug模式
+        TcpLibConfig.getInstance()
+                .setDebugMode(BuildConfig.DEBUG);
+        //启动服务
         TcpLibService.getInstance()
-                .bindService(30000, TcpDataBuilder.builder(new DataGenerate(), new DataDispose()));
+                .bindService(port, TcpDataBuilder.builder(new DataGenerate(), new DataDispose()));
 //
 //        TcpLibService.getInstance().close();
 
 
-        TcpLibClient.getInstance()
-                .connect("192.168.1.245", 8088
-                        , TcpDataBuilder.builder(new DataGenerate(), new DataDispose()));
+//        TcpLibClient.getInstance()
+//                .connect("192.168.1.245", 8088
+//                        , TcpDataBuilder.builder(new DataGenerate(), new DataDispose()));
 
     }
 
@@ -55,20 +66,52 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if (v.equals(binding.send)) {
 
             TcpLibService.getInstance()
-                    .bindService(30001, TcpDataBuilder.builder(new DataGenerate(), new DataDispose()));
+                    .sendAllClientMessage(port, "The message sent by the service");
 //            TcpLibClient.getInstance().sendMessage("192.168.1.245:8088", "192.168.1.245");
-        } else if (v.equals(binding.close)) {
+        }
+        else if (v.equals(binding.start)) {
+            //启动服务
+            TcpLibService.getInstance()
+                    .bindService(port,
+                            TcpDataBuilder.builder(new DataGenerate(),
+                                    new DataDispose()));
+        }
+        else if (v.equals(binding.close)) {
 
-            TcpLibService.getInstance().close(30000);
+            TcpLibService.getInstance().close(port);
 //            TcpLibClient.getInstance().close("192.168.1.245:8088");
         }
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
-    public void eventFun(TcpServiceReceiveDataEvent event) {
-        Log.e(TAG, "服务端端口: " + event.getServicePort() + ", 地址: " + event.getAddress() + ", 接收到数据: " + event.getMessage());
+    public void eventFun(TcpBaseEvent et) {
+        //todo 自行处理的报文数据分发事件
+        if (et instanceof TcpServiceReceiveDataEvent) {
+            TcpServiceReceiveDataEvent event = (TcpServiceReceiveDataEvent) et;
+            Log.e(TAG, "服务端端口: " + event.getServicePort() + ", 地址: " + event.getAddress() + ", 接收到数据: " + event.getMessage());
 
-        TcpLibService.getInstance().sendMessage(event.getServicePort(), event.getAddress(), "shou dao xiao xi");
+            TcpLibService.getInstance().sendMessage(event.getServicePort(), event.getAddress(), "shou dao xiao xi");
+        }
+        //todo 服务启动成功
+        else if (et instanceof TcpServiceBindSuccessEvent) {
+            Log.w(TAG, String.format("服务器启动成功，端口：%d", et.getServicePort()));
+        }
+        //todo 服务启动失败
+        else if (et instanceof TcpServiceBindFailEvent) {
+            Log.w(TAG, String.format("服务器启动失败，端口：%d", et.getServicePort()));
+        }
+        //todo 服务关闭
+        else if (et instanceof TcpServiceCloseEvent) {
+            Log.w(TAG, String.format("服务器已关闭，端口：%d", et.getServicePort()));
+        }
+        //todo 客户端上线
+        else if (et instanceof TcpClientConnectEvent) {
+            Log.w(TAG, String.format("新客户端连接，服务端口：%d, 客户端地址：%s", et.getServicePort(), et.getAddress()));
+        }
+        //todo 客户端下线
+        else if (et instanceof TcpClientDisconnectEvent) {
+            Log.w(TAG, String.format("客户端连接断开，服务端口：%d, 客户端地址：%s", et.getServicePort(), et.getAddress()));
+        }
     }
 
 }

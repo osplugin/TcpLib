@@ -11,6 +11,10 @@ import com.mjsoftking.tcplib.event.TcpBaseEvent;
  */
 public class TcpServiceConnectFailEvent extends TcpBaseEvent {
 
+    /**
+     * @param servicePort 服务端口
+     * @param address     服务器地址，serverIp:(serverPort)
+     */
     public TcpServiceConnectFailEvent(int servicePort, String address) {
         super(servicePort, address);
     }

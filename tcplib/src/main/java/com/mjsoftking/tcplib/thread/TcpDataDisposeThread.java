@@ -27,7 +27,7 @@ public class TcpDataDisposeThread extends Thread {
     @Override
     public void run() {
         while (bufferQueue.size() > 0) {
-            dataDispose.dispose(servicePort, address, bufferQueue);
+            dataDispose.dispose(bufferQueue, servicePort, address);
         }
     }
 }

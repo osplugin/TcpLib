@@ -22,6 +22,6 @@ public interface TcpBaseDataDispose {
      *                    客户端使用时，返回的是服务器的地址
      * @param bufferQueue 报文缓冲区，处理的报文需要移除队列
      */
-    void dispose(int servicePort, String address, ByteQueueList bufferQueue);
+    void dispose(ByteQueueList bufferQueue, int servicePort, String address);
 
 }

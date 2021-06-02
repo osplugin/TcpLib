@@ -3,6 +3,7 @@ package com.mjsoftking.tcplib.thread;
 
 import android.util.Log;
 
+import com.mjsoftking.tcplib.TcpLibConfig;
 import com.mjsoftking.tcplib.dispose.TcpDataBuilder;
 import com.mjsoftking.tcplib.event.service.TcpClientConnectEvent;
 import com.mjsoftking.tcplib.event.service.TcpServiceCloseEvent;
@@ -52,7 +53,9 @@ public class TcpServiceAcceptThread extends Thread {
                 TcpDataReceiveThread tcpDataReceiveThread = new TcpDataReceiveThread(this.servicePort, address, clientMap, false);
                 tcpDataReceiveThread.start();
             } catch (IOException e) {
-                Log.e(TAG, "服务监听关闭", e);
+                if (TcpLibConfig.getInstance().isDebugMode()) {
+                    Log.e(TAG, "服务监听关闭", e);
+                }
                 //发送服务器监听关闭事件
                 EventBus.getDefault().post(new TcpServiceCloseEvent(this.servicePort, "0.0.0.0:" + servicePort));
                 return;

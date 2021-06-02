@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools">
+<layout xmlns:android="http://schemas.android.com/apk/res/android">
 
     <data>
 
@@ -18,13 +16,26 @@
             android:id="@+id/etPort"
             android:layout_width="match_parent"
             android:layout_height="35dp"
-            android:background="@color/white"
-            />
+            android:background="@color/white" />
+
+        <TextView
+            android:id="@+id/start"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@color/black"
+            android:onClick="@{click::onClick}"
+            android:padding="20dp"
+            android:text="启动"
+            android:textColor="@color/white" />
 
         <TextView
             android:id="@+id/send"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_marginLeft="10dp"
+            android:layout_toEndOf="@+id/start"
+            android:layout_toRightOf="@+id/start"
             android:background="@color/black"
             android:onClick="@{click::onClick}"
             android:padding="20dp"
@@ -35,8 +46,10 @@
             android:id="@+id/close"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_toRightOf="@+id/send"
+            android:layout_marginStart="10dp"
             android:layout_marginLeft="10dp"
+            android:layout_toEndOf="@+id/send"
+            android:layout_toRightOf="@+id/send"
             android:background="@color/black"
             android:onClick="@{click::onClick}"
             android:padding="20dp"

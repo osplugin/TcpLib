@@ -17,7 +17,7 @@ public class ServiceDataDispose implements TcpBaseDataDispose {
     private final static String TAG = ServiceDataDispose.class.getSimpleName();
 
     @Override
-    public void dispose(int servicePort, String clientAddress, ByteQueueList bufferQueue) {
+    public void dispose(ByteQueueList bufferQueue, int servicePort, String clientAddress) {
         byte[] b = new byte[bufferQueue.size()];
         for (int i = 0; i < bufferQueue.size(); ++i) {
             b[i] = bufferQueue.get(i);

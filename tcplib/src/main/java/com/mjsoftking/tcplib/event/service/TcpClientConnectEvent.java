@@ -11,6 +11,10 @@ import com.mjsoftking.tcplib.event.TcpBaseEvent;
  */
 public class TcpClientConnectEvent extends TcpBaseEvent {
 
+    /**
+     * @param servicePort 服务端口
+     * @param address     客户端地址，clientIp:(clientPort)
+     */
     public TcpClientConnectEvent(int servicePort, String address) {
         super(servicePort, address);
     }

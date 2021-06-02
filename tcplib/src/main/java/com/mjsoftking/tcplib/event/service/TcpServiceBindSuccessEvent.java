@@ -11,6 +11,10 @@ import com.mjsoftking.tcplib.event.TcpBaseEvent;
  */
 public class TcpServiceBindSuccessEvent extends TcpBaseEvent {
 
+    /**
+     * @param servicePort 服务端口
+     * @param address     服务地址，0。0.0.0:(servicePort)
+     */
     public TcpServiceBindSuccessEvent(int servicePort, String address) {
         super(servicePort, address);
     }

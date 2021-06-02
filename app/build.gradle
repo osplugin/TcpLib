@@ -26,11 +26,6 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
-    repositories {
-        flatDir {
-            dirs 'libs'
-        }
-    }
 
     buildFeatures {
         //启用数据绑定，MVVM
@@ -49,7 +44,7 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
 
 
-    implementation 'org.greenrobot:eventbus:3.1.1'
+    implementation 'org.greenrobot:eventbus:3.2.0'
     //  文档地址，含大量工具类  https://github.com/Blankj/AndroidUtilCode/blob/master/lib/utilcode/README-CN.md
-    implementation 'com.blankj:utilcodex:1.30.5'
+    implementation 'com.blankj:utilcodex:1.30.6'
 }
