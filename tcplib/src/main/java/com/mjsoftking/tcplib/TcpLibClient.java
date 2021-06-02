@@ -5,8 +5,8 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 
 import com.mjsoftking.tcplib.dispose.TcpDataBuilder;
-import com.mjsoftking.tcplib.event.client.TcpServiceConnectSuccessEvent;
 import com.mjsoftking.tcplib.event.client.TcpServiceConnectFailEvent;
+import com.mjsoftking.tcplib.event.client.TcpServiceConnectSuccessEvent;
 import com.mjsoftking.tcplib.thread.TcpDataReceiveThread;
 
 import org.greenrobot.eventbus.EventBus;
@@ -28,6 +28,12 @@ public class TcpLibClient {
     private final static String TAG = TcpLibClient.class.getSimpleName();
 
     private static TcpLibClient TCP_CLIENT;
+    //存储连接上的服务端和对应此服务器连接的发送和接收数据的处理规则
+    private final Map<String, TcpDataBuilder> SERVICE_MAP;
+
+    private TcpLibClient() {
+        SERVICE_MAP = new ConcurrentHashMap<>();
+    }
 
     public static synchronized TcpLibClient getInstance() {
         if (null == TCP_CLIENT) {
@@ -35,13 +41,6 @@ public class TcpLibClient {
         }
         return TCP_CLIENT;
     }
-
-    private TcpLibClient() {
-        SERVICE_MAP = new ConcurrentHashMap<>();
-    }
-
-    //存储连接上的服务端和对应此服务器连接的发送和接收数据的处理规则
-    private final Map<String, TcpDataBuilder> SERVICE_MAP;
 
     /**
      * 发起连接
@@ -51,9 +50,22 @@ public class TcpLibClient {
      * @param builder   使用builder生成对发送数据生成和接收数据解析的实现
      */
     public synchronized void connect(String ipAddress, int port, @NonNull TcpDataBuilder builder) {
-        final String address = ipAddress + ":" + port;
+        connect(ipAddress + ":" + port, builder);
+    }
+
+    /**
+     * 发起连接
+     *
+     * @param address ip:port
+     * @param builder 使用builder生成对发送数据生成和接收数据解析的实现
+     */
+    public synchronized void connect(String address, @NonNull TcpDataBuilder builder) {
+        String[] ads = address.split(":");
+        String ipAddress = ads[0];
+        int port = Integer.parseInt(ads[1]);
+
         if (null != SERVICE_MAP.get(address)) {
-            if(TcpLibConfig.getInstance().isDebugMode()) {
+            if (TcpLibConfig.getInstance().isDebugMode()) {
                 Log.w(TAG, "指定服务端已经连接上");
             }
             return;
@@ -71,7 +83,7 @@ public class TcpLibClient {
                 //socket关闭时，接收方法就会被关闭
                 new TcpDataReceiveThread(port, address, SERVICE_MAP, true).start();
             } catch (IOException e) {
-                if(TcpLibConfig.getInstance().isDebugMode()) {
+                if (TcpLibConfig.getInstance().isDebugMode()) {
                     Log.e(TAG, "服务器连接失败", e);
                 }
                 //发送服务器连接失败事件
@@ -79,6 +91,17 @@ public class TcpLibClient {
             }
         }).start();
     }
+
+    /**
+     * 关闭对指定服务端的连接
+     *
+     * @param ipAddress 服务端ip
+     * @param port      端口
+     */
+    public synchronized void close(String ipAddress, int port) {
+        close(ipAddress + ":" + port);
+    }
+
 
     /**
      * 关闭对指定服务端的连接
@@ -108,7 +131,7 @@ public class TcpLibClient {
     public void sendMessage(String address, String content) {
         TcpDataBuilder disposeBuilder = SERVICE_MAP.get(address);
         if (null == disposeBuilder) {
-            if(TcpLibConfig.getInstance().isDebugMode()) {
+            if (TcpLibConfig.getInstance().isDebugMode()) {
                 Log.w(TAG, "服务端端口: " + address + ", 指定服务端未连接");
             }
             return;
@@ -120,7 +143,7 @@ public class TcpLibClient {
                 outputStream.write(disposeBuilder.getDataGenerate().generate(content));
                 outputStream.flush();
             } catch (IOException e) {
-                if(TcpLibConfig.getInstance().isDebugMode()) {
+                if (TcpLibConfig.getInstance().isDebugMode()) {
                     Log.e(TAG, "服务端端口: " + address + ", 向指定服务端发送消息异常", e);
                 }
             }
@@ -148,7 +171,7 @@ public class TcpLibClient {
     public void sendMessage(String address, byte[] content) {
         TcpDataBuilder disposeBuilder = SERVICE_MAP.get(address);
         if (null == disposeBuilder) {
-            if(TcpLibConfig.getInstance().isDebugMode()) {
+            if (TcpLibConfig.getInstance().isDebugMode()) {
                 Log.w(TAG, "服务端端口: " + address + ", 指定服务端未连接");
             }
             return;
@@ -160,7 +183,7 @@ public class TcpLibClient {
                 outputStream.write(disposeBuilder.getDataGenerate().generate(content));
                 outputStream.flush();
             } catch (IOException e) {
-                if(TcpLibConfig.getInstance().isDebugMode()) {
+                if (TcpLibConfig.getInstance().isDebugMode()) {
                     Log.e(TAG, "服务端端口: " + address + ", 向指定服务端发送消息异常", e);
                 }
             }
