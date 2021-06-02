@@ -10,10 +10,9 @@
 #### 二、工程引入工具包
 下载项目，可以在APP项目的libs文件下找到*.aar文件（已编译为最新版），选择其中一个引入自己的工程
 
-引入微信工具包及微信SDK
 ```
 dependencies {
-   //引入wxlibrary.aar资源
+   //引入tcplib.aar资源
    implementation files('libs/tcplib.aar')
    //eventbus，引入后你的项目将支持EventBus，EventBus是一种用于Android的事件发布-订阅总线，替代广播的传值方式，使用方法可以度娘查询。
    implementation 'org.greenrobot:eventbus:3.2.0'
