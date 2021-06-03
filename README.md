@@ -72,8 +72,8 @@ public class DataGenerate implements TcpBaseDataGenerate {
     }
 }
 ```
-#### 五、服务的使用
- **- 服务启动，需提供启动的端口号** 
+#### 五、服务端的使用
+ **- 服务端启动，需提供启动的端口号** 
 
 ```
 int port = 50000;
@@ -81,13 +81,13 @@ TcpLibService.getInstance()
                 .bindService(port, TcpDataBuilder.builder(new DataGenerate(), new DataDispose()));
 ```
 
- **- 服务关闭，关闭时需提供启动的端口号** 
+ **- 服务端关闭，关闭时需提供启动的端口号** 
 
 ```
 int port = 50000;
 TcpLibService.getInstance().close(port);
 ```
- **1. 服务的启动、客户端事件处理** 
+ **1. 服务端的启动、客户端事件处理** 
 
  **在任意对象下，创建实例时，以下以activity为例** 
 
@@ -167,7 +167,6 @@ int getOnlineClientCount(int port){}
 获取指定端口服务器的在线客户端，返回：null:服务器未启动，反之为在线客户端的ip:port形式列表，此内容可以直接在服务器向其发送数据
 List<String> getOnlineClient(int port){}
 ```
-
 ```
 关闭指定端口服务器下的客户端连接
 void closeClient(int port, String address) {}
