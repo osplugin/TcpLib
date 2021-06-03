@@ -14,6 +14,7 @@ import org.greenrobot.eventbus.EventBus;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -26,6 +27,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class TcpLibClient {
 
     private final static String TAG = TcpLibClient.class.getSimpleName();
+    private final static String IP_ADDRESS = "%s:%d";
 
     private static TcpLibClient TCP_CLIENT;
     //存储连接上的服务端和对应此服务器连接的发送和接收数据的处理规则
@@ -50,7 +52,7 @@ public class TcpLibClient {
      * @param builder   使用builder生成对发送数据生成和接收数据解析的实现
      */
     public synchronized void connect(String ipAddress, int port, @NonNull TcpDataBuilder builder) {
-        connect(ipAddress + ":" + port, builder);
+        connect(String.format(Locale.getDefault(), IP_ADDRESS, ipAddress, port), builder);
     }
 
     /**
@@ -99,7 +101,7 @@ public class TcpLibClient {
      * @param port      端口
      */
     public boolean isConnect(String ipAddress, int port) {
-        return isConnect(ipAddress + ":" + port);
+        return isConnect(String.format(Locale.getDefault(), IP_ADDRESS, ipAddress, port));
     }
 
 
@@ -126,7 +128,7 @@ public class TcpLibClient {
      * @param port      端口
      */
     public synchronized void close(String ipAddress, int port) {
-        close(ipAddress + ":" + port);
+        close(String.format(Locale.getDefault(), IP_ADDRESS, ipAddress, port));
     }
 
 
@@ -177,6 +179,16 @@ public class TcpLibClient {
         }).start();
     }
 
+    /**
+     * 向指定的服务端按照指定数据格式发送数据
+     *
+     * @param ipAddress 服务端ip
+     * @param port      端口
+     * @param content   内容
+     */
+    public void sendMessage(String ipAddress, int port, String content) {
+        sendMessage(String.format(Locale.getDefault(), IP_ADDRESS, ipAddress, port), content);
+    }
 
     /**
      * 向所有已连接的服务端按照指定数据格式发送数据
@@ -217,6 +229,16 @@ public class TcpLibClient {
         }).start();
     }
 
+    /**
+     * 向指定的服务端按照指定数据格式发送数据
+     *
+     * @param ipAddress 服务端ip
+     * @param port      端口
+     * @param content   内容
+     */
+    public void sendMessage(String ipAddress, int port, byte[] content) {
+        sendMessage(String.format(Locale.getDefault(), IP_ADDRESS, ipAddress, port), content);
+    }
 
     /**
      * 向所有已连接的服务端按照指定数据格式发送数据

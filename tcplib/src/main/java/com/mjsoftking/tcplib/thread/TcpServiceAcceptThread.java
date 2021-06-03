@@ -13,6 +13,7 @@ import org.greenrobot.eventbus.EventBus;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -24,6 +25,7 @@ import java.util.Map;
 public class TcpServiceAcceptThread extends Thread {
 
     private final static String TAG = TcpServiceAcceptThread.class.getSimpleName();
+    private final static String IP_ADDRESS = "%s:%d";
 
     private final ServerSocket serverSocket;
     private final Map<String, TcpDataBuilder> clientMap;
@@ -63,7 +65,8 @@ public class TcpServiceAcceptThread extends Thread {
                     }
                 }
                 //发送服务器监听关闭事件
-                EventBus.getDefault().post(new TcpServiceCloseEvent(this.servicePort, "0.0.0.0:" + servicePort));
+                EventBus.getDefault().post(new TcpServiceCloseEvent(this.servicePort,
+                        String.format(Locale.getDefault(), IP_ADDRESS, "0.0.0.0", servicePort)));
                 return;
             }
         }
