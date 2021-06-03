@@ -93,6 +93,33 @@ public class TcpLibClient {
     }
 
     /**
+     * 对指定服务端是否已连接
+     *
+     * @param ipAddress 服务端ip
+     * @param port      端口
+     */
+    public boolean isConnect(String ipAddress, int port) {
+        return isConnect(ipAddress + ":" + port);
+    }
+
+
+    /**
+     * 对指定服务端是否已连接
+     *
+     * @param address 服务端地址，ip:port 形式，如：0.0.0.0:30000
+     */
+    public boolean isConnect(String address) {
+        TcpDataBuilder disposeBuilder = SERVICE_MAP.get(address);
+        if (null == disposeBuilder) {
+            if (TcpLibConfig.getInstance().isDebugMode()) {
+                Log.w(TAG, "服务端端口: " + address + ", 指定服务端未连接");
+            }
+            return false;
+        }
+        return disposeBuilder.getSocket().isConnected();
+    }
+
+    /**
      * 关闭对指定服务端的连接
      *
      * @param ipAddress 服务端ip
