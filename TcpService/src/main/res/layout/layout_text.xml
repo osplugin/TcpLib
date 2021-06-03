@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <data>
+
+        <variable
+            name="message"
+            type="String" />
+
+        <variable
+            name="timeStr"
+            type="String" />
+
+        <variable
+            name="error"
+            type="Boolean" />
+    </data>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="5dp">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@{`操作时间: `+timeStr}"
+            android:textColor="@{error ? @color/colorAccent : @color/main_color}"
+            android:textSize="14sp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:text="@{message}"
+            android:textColor="@{error ? @color/colorAccent : @color/main_color}"
+            android:textIsSelectable="true"
+            android:textSize="14sp" />
+    </LinearLayout>
+</layout>

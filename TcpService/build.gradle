@@ -43,7 +43,7 @@ dependencies {
     androidTestImplementation 'androidx.test.ext:junit:1.1.2'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
 
-
+    implementation fileTree(dir: 'libs', include: ['DialogUtilsLib-release.aar'])
     implementation 'org.greenrobot:eventbus:3.2.0'
     //  文档地址，含大量工具类  https://github.com/Blankj/AndroidUtilCode/blob/master/lib/utilcode/README-CN.md
     implementation 'com.blankj:utilcodex:1.30.6'

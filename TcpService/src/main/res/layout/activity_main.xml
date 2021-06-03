@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <data>
+
+        <variable
+            name="click"
+            type="android.view.View.OnClickListener" />
+
+        <variable
+            name="etPort"
+            type="String" />
+
+        <variable
+            name="etContent"
+            type="String" />
+
+        <variable
+            name="isConnect"
+            type="Boolean" />
+
+        <variable
+            name="select"
+            type="Boolean" />
+    </data>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="10dp">
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Port"
+                android:textColor="@color/black"
+                android:textSize="16sp" />
+
+            <androidx.appcompat.widget.AppCompatEditText
+                android:id="@+id/port"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:layout_marginLeft="10dp"
+                android:layout_weight="1"
+                android:background="@drawable/bg_et_enabled_select"
+                android:enabled="@{!isConnect}"
+                android:gravity="center"
+                android:hint="50000"
+                android:inputType="number"
+                android:maxLength="5"
+                android:padding="5dp"
+                android:text="@={etPort}"
+                android:textColor="@color/black"
+                android:textSize="16sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="10dp">
+
+            <TextView
+                android:id="@+id/start"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:background="@drawable/bg_button_enabled_select"
+                android:enabled="@{!isConnect}"
+                android:gravity="center"
+                android:onClick="@{click::onClick}"
+                android:padding="5dp"
+                android:text="启动"
+                android:textColor="@color/white"
+                android:textSize="16sp" />
+
+            <TextView
+                android:id="@+id/close"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="10dp"
+                android:layout_weight="1"
+                android:background="@drawable/bg_button_enabled_select"
+                android:enabled="@{isConnect}"
+                android:gravity="center"
+                android:onClick="@{click::onClick}"
+                android:padding="5dp"
+                android:text="关闭"
+                android:textColor="@color/white"
+                android:textSize="16sp" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="10dp">
+
+            <ListView
+                android:id="@+id/list"
+                android:background="@drawable/bg_button5"
+                android:layout_width="match_parent"
+                android:layout_height="120dp"
+                />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="10dp">
+
+            <androidx.appcompat.widget.AppCompatEditText
+                android:id="@+id/content"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:background="@drawable/bg_et_enabled_select"
+                android:enabled="@{isConnect &amp;&amp; select}"
+                android:gravity="start"
+                android:hint="要发送的消息"
+                android:padding="5dp"
+                android:text="@={etContent}"
+                android:textColor="@color/black"
+                android:textSize="16sp" />
+
+            <TextView
+                android:id="@+id/send"
+                android:layout_width="100dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginTop="10dp"
+                android:background="@drawable/bg_button_enabled_select"
+                android:enabled="@{isConnect &amp;&amp; select}"
+                android:gravity="center"
+                android:onClick="@{click::onClick}"
+                android:padding="5dp"
+                android:text="发送"
+                android:textColor="@color/white"
+                android:textSize="16sp" />
+
+        </LinearLayout>
+
+        <ScrollView
+            android:id="@+id/tipScroll"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_margin="10dp"
+            android:background="@drawable/bg_button5">
+
+            <LinearLayout
+                android:id="@+id/tipLayout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
+
+        </ScrollView>
+
+    </LinearLayout>
+
+</layout>

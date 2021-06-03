@@ -1,4 +1,4 @@
 include ':tcplib'
-include ':app'
+include ':TcpService'
 rootProject.name = "Tcp Service App"
 include ':tcpclient'

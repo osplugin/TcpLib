@@ -8,6 +8,12 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
 
+    <color name="colorAccent">#F8B551</color>
+    <color name="text_color">#4D4D4D</color>
+    <color name="text_hint_color">#CCCCCC</color>
+    <color name="red">#CC0001</color>
+    <color name="dark_green">#22C5A3</color>
+
     <!-- 主色调-->
     <color name="main_color">#22C5A3</color>
     <!-- 辅色调-->
