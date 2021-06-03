@@ -66,24 +66,27 @@ public class TcpLibClient {
         String ipAddress = ads[0];
         int port = Integer.parseInt(ads[1]);
 
-        if (null != SERVICE_MAP.get(address)) {
-            if (TcpLibConfig.getInstance().isDebugMode()) {
-                Log.w(TAG, "指定服务端已经连接上");
-            }
-            return;
-        }
         new Thread(() -> {
             try {
-                Socket socket = new Socket(ipAddress, port);
-                //超时不限制
-                socket.setSoTimeout(0);
-                //线程安全的map
-                SERVICE_MAP.put(address, builder.setSocket(socket));
-                //发送服务器已连接事件
-                EventBus.getDefault().post(new TcpServiceConnectSuccessEvent(port, address));
+                synchronized (address.intern()) {
+                    if (null != SERVICE_MAP.get(address)) {
+                        if (TcpLibConfig.getInstance().isDebugMode()) {
+                            Log.w(TAG, "指定服务端已经连接上");
+                        }
+                        return;
+                    }
 
-                //socket关闭时，接收方法就会被关闭
-                new TcpDataReceiveThread(port, address, SERVICE_MAP, true).start();
+                    Socket socket = new Socket(ipAddress, port);
+                    //超时不限制
+                    socket.setSoTimeout(0);
+                    //线程安全的map
+                    SERVICE_MAP.put(address, builder.setSocket(socket));
+                    //发送服务器已连接事件
+                    EventBus.getDefault().post(new TcpServiceConnectSuccessEvent(port, address));
+
+                    //socket关闭时，接收方法就会被关闭
+                    new TcpDataReceiveThread(port, address, SERVICE_MAP, true).start();
+                }
             } catch (IOException e) {
                 if (TcpLibConfig.getInstance().isDebugMode()) {
                     Log.e(TAG, "服务器连接失败", e);

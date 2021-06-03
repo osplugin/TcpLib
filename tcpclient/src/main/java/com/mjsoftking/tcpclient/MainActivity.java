@@ -1,29 +1,145 @@
 package com.mjsoftking.tcpclient;
 
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.text.TextUtils;
+import android.view.LayoutInflater;
 import android.view.View;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.databinding.DataBindingUtil;
 
+import com.blankj.utilcode.util.RegexUtils;
 import com.mjsoftking.tcpclient.databinding.ActivityMainBinding;
+import com.mjsoftking.tcpclient.databinding.LayoutTextBinding;
+import com.mjsoftking.tcpclient.test.dispose.ClientDataDispose;
+import com.mjsoftking.tcpclient.test.event.TcpClientReceiveDataEvent;
+import com.mjsoftking.tcpclient.test.generate.ClientDataGenerate;
+import com.mjsoftking.tcplib.TcpLibClient;
+import com.mjsoftking.tcplib.TcpLibConfig;
+import com.mjsoftking.tcplib.dispose.TcpDataBuilder;
+import com.mjsoftking.tcplib.event.TcpBaseEvent;
+import com.mjsoftking.tcplib.event.client.TcpServiceConnectFailEvent;
+import com.mjsoftking.tcplib.event.client.TcpServiceConnectSuccessEvent;
+import com.mjsoftking.tcplib.event.client.TcpServiceDisconnectEvent;
+
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
-    private final String ip = "127.0.0.1";
-    private final int port = 50000;
+    private final static String TAG = MainActivity.class.getSimpleName();
 
     private ActivityMainBinding binding;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        EventBus.getDefault().register(this);
+        //配置debug模式
+        TcpLibConfig.getInstance()
+                .setDebugMode(BuildConfig.DEBUG);
+
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main);
         binding.setClick(this);
+        binding.setIsConnect(false);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        EventBus.getDefault().unregister(this);
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void eventFun(TcpBaseEvent et) {
+        //todo 自行处理的报文数据分发事件
+        if (et instanceof TcpClientReceiveDataEvent) {
+            TcpClientReceiveDataEvent event = (TcpClientReceiveDataEvent) et;
+            printf("服务端端口: " + event.getServicePort() + ", 地址: " + event.getAddress() + ", 接收到数据: " + event.getMessage() ,false);
+        }
+        //todo 连接服务成功
+        else if (et instanceof TcpServiceConnectSuccessEvent) {
+            binding.setIsConnect(true);
+            printf("连接服务端成功, 服务端地址:  " + et.getAddress() ,false);
+        }
+        //todo 连接服务失败
+        else if (et instanceof TcpServiceConnectFailEvent) {
+            binding.setIsConnect(false);
+            printf("连接服务端失败, 服务端地址:  " + et.getAddress() ,true);
+        }
+        //todo 连接服务关闭
+        else if (et instanceof TcpServiceDisconnectEvent) {
+            binding.setIsConnect(false);
+            printf("与服务端连接关闭, 服务端地址:  " + et.getAddress() ,true);
+        }
     }
 
     @Override
     public void onClick(View v) {
+        //
+        if (v.equals(binding.connect)) {
+            if (!RegexUtils.isIP(binding.getEtIp())
+                    || TextUtils.isEmpty(binding.getEtPort())
+                    || Integer.parseInt(binding.getEtPort()) > 65565
+            ) {
+                printf("Ip或Port输入不正确", true);
+                return;
+            }
 
+            //发起连接
+            TcpLibClient.getInstance()
+                    .connect(binding.getEtIp(), Integer.parseInt(binding.getEtPort()),
+                            TcpDataBuilder.builder(new ClientDataGenerate(), new ClientDataDispose()));
+        }
+        //
+        else if (v.equals(binding.disconnect)) {
+            if (TextUtils.isEmpty(binding.getEtIp())
+                    || TextUtils.isEmpty(binding.getEtPort())
+            ) {
+                return;
+            }
+            TcpLibClient.getInstance()
+                    .close(binding.getEtIp(), Integer.parseInt(binding.getEtPort()));
+        }
+        //
+        else if (v.equals(binding.send)) {
+            if (TextUtils.isEmpty(binding.getEtIp())
+                    || TextUtils.isEmpty(binding.getEtPort())
+            ) {
+                return;
+            }
+
+            if (TextUtils.isEmpty(binding.getEtContent())) {
+                printf("消息内容为空", true);
+                return;
+            }
+            if (!TcpLibClient.getInstance()
+                    .isConnect(binding.getEtIp(), Integer.parseInt(binding.getEtPort()))) {
+                printf("与服务器连接已断开", true);
+                return;
+            }
+            TcpLibClient.getInstance().sendMessage(binding.getEtIp(), Integer.parseInt(binding.getEtPort()), binding.getEtContent());
+            printf("发送消息: " + binding.getEtContent(), false);
+        }
+    }
+
+
+    private void printf(String result, boolean error) {
+        LayoutTextBinding textBinding = DataBindingUtil.inflate(LayoutInflater.from(this), R.layout.layout_text, null, false);
+        textBinding.setMessage(result);
+        textBinding.setTimeStr(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date()));
+        textBinding.setError(error);
+        binding.tipLayout.addView(textBinding.getRoot());
+
+        new Handler(Looper.getMainLooper()).post(() -> {
+            binding.tipScroll.fullScroll(View.FOCUS_DOWN);
+        });
     }
 }
