@@ -53,8 +53,14 @@ public class TcpServiceAcceptThread extends Thread {
                 TcpDataReceiveThread tcpDataReceiveThread = new TcpDataReceiveThread(this.servicePort, address, clientMap, false);
                 tcpDataReceiveThread.start();
             } catch (IOException e) {
-                if (TcpLibConfig.getInstance().isDebugMode()) {
-                    Log.e(TAG, "服务监听关闭", e);
+                if ("Socket closed".equals(e.getMessage())) {
+                    if (TcpLibConfig.getInstance().isDebugMode()) {
+                        Log.w(TAG, "服务监听关闭, 服务端口: " + servicePort);
+                    }
+                } else {
+                    if (TcpLibConfig.getInstance().isDebugMode()) {
+                        Log.e(TAG, e.getMessage(), e);
+                    }
                 }
                 //发送服务器监听关闭事件
                 EventBus.getDefault().post(new TcpServiceCloseEvent(this.servicePort, "0.0.0.0:" + servicePort));

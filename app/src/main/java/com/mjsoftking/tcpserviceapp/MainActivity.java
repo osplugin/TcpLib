@@ -7,6 +7,7 @@ import android.view.View;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.databinding.DataBindingUtil;
 
+import com.blankj.utilcode.util.CollectionUtils;
 import com.mjsoftking.tcplib.TcpLibConfig;
 import com.mjsoftking.tcplib.TcpLibService;
 import com.mjsoftking.tcplib.dispose.TcpDataBuilder;
@@ -17,20 +18,20 @@ import com.mjsoftking.tcplib.event.service.TcpServiceBindFailEvent;
 import com.mjsoftking.tcplib.event.service.TcpServiceBindSuccessEvent;
 import com.mjsoftking.tcplib.event.service.TcpServiceCloseEvent;
 import com.mjsoftking.tcpserviceapp.databinding.ActivityMainBinding;
-import com.mjsoftking.tcpserviceapp.test.DataDispose;
-import com.mjsoftking.tcpserviceapp.test.DataGenerate;
+import com.mjsoftking.tcpserviceapp.test.dispose.ServiceDataDispose;
 import com.mjsoftking.tcpserviceapp.test.event.TcpServiceReceiveDataEvent;
+import com.mjsoftking.tcpserviceapp.test.generate.ServiceDataGenerate;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
+import java.util.List;
+
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
     private final static String TAG = MainActivity.class.getSimpleName();
-
-    private ActivityMainBinding binding;
-
     private final int port = 50000;
+    private ActivityMainBinding binding;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,7 +45,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 .setDebugMode(BuildConfig.DEBUG);
         //启动服务
         TcpLibService.getInstance()
-                .bindService(port, TcpDataBuilder.builder(new DataGenerate(), new DataDispose()));
+                .bindService(port, TcpDataBuilder.builder(new ServiceDataGenerate(),
+                        new ServiceDataDispose()));
 //
 //        TcpLibService.getInstance().close();
 
@@ -68,14 +70,23 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             TcpLibService.getInstance()
                     .sendAllClientMessage(port, "The message sent by the service");
 //            TcpLibClient.getInstance().sendMessage("192.168.1.245:8088", "192.168.1.245");
-        }
-        else if (v.equals(binding.start)) {
+        } else if (v.equals(binding.start)) {
             //启动服务
             TcpLibService.getInstance()
                     .bindService(port,
-                            TcpDataBuilder.builder(new DataGenerate(),
-                                    new DataDispose()));
+                            TcpDataBuilder.builder(new ServiceDataGenerate(),
+                                    new ServiceDataDispose()));
         }
+        //
+        else if (v.equals(binding.closeClient)) {
+            List<String> clients = TcpLibService.getInstance().getOnlineClient(port);
+            if (CollectionUtils.isNotEmpty(clients)) {
+                Log.w(TAG, String.format("客户端%s被关闭", clients.get(0)));
+                TcpLibService.getInstance().closeClient(port, clients.get(0));
+            }
+//            TcpLibClient.getInstance().close("192.168.1.245:8088");
+        }
+        //
         else if (v.equals(binding.close)) {
 
             TcpLibService.getInstance().close(port);
@@ -88,7 +99,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         //todo 自行处理的报文数据分发事件
         if (et instanceof TcpServiceReceiveDataEvent) {
             TcpServiceReceiveDataEvent event = (TcpServiceReceiveDataEvent) et;
-            Log.e(TAG, "服务端端口: " + event.getServicePort() + ", 地址: " + event.getAddress() + ", 接收到数据: " + event.getMessage());
+            Log.w(TAG, "服务端端口: " + event.getServicePort() + ", 地址: " + event.getAddress() + ", 接收到数据: " + event.getMessage());
 
             TcpLibService.getInstance().sendMessage(event.getServicePort(), event.getAddress(), "shou dao xiao xi");
         }

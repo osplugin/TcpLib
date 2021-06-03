@@ -58,7 +58,7 @@ public class TcpDataReceiveThread extends Thread {
                 byte[] buffer = new byte[1024 * 1024];
                 int bufferLength = client.getInputStream().read(buffer);
                 if (bufferLength <= 0) {
-                    throw new IOException("连接中断");
+                    throw new IOException("Socket closed");
                 }
                 byte[] dataBuffer = new byte[bufferLength];
                 System.arraycopy(buffer, 0, dataBuffer, 0, bufferLength);
@@ -70,7 +70,7 @@ public class TcpDataReceiveThread extends Thread {
                     dataDisposeThread.start();
                 }
             } catch (Exception e) {
-                if ("连接中断".equals(e.getMessage())) {
+                if ("Socket closed".equals(e.getMessage())) {
                     if (TcpLibConfig.getInstance().isDebugMode()) {
                         Log.w(TAG, "连接中断," + (isClient ? "服务器地址：" : "客户端器地址：") + address);
                     }

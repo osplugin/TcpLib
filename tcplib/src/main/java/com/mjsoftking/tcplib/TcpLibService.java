@@ -58,7 +58,7 @@ public class TcpLibService {
 
     public synchronized void bindService(int port, int backlog, @NonNull TcpDataBuilder builder) {
         if (null != serverSocketMap.get(port)) {
-            if(TcpLibConfig.getInstance().isDebugMode()) {
+            if (TcpLibConfig.getInstance().isDebugMode()) {
                 Log.w(TAG, "TCP服务在端口: " + port + "下已经启动，请勿多次启动");
             }
             return;
@@ -77,7 +77,7 @@ public class TcpLibService {
             //服务关闭时，接收方法就会被关闭
             new TcpServiceAcceptThread(serverSocket, portMap.get(port), builder).start();
         } catch (IOException e) {
-            if(TcpLibConfig.getInstance().isDebugMode()) {
+            if (TcpLibConfig.getInstance().isDebugMode()) {
                 Log.e(TAG, "服务开启失败", e);
             }
             //发送服务器监听失败事件
@@ -139,6 +139,37 @@ public class TcpLibService {
     }
 
     /**
+     * 指定端口服务器的关闭指定客户端
+     */
+    public void closeClient(int port, String address) {
+        if (!isRun(port)) {
+            if (TcpLibConfig.getInstance().isDebugMode()) {
+                Log.w(TAG, "服务端端口: " + port + ", 服务端未启动");
+            }
+            return;
+        }
+        Map<String, TcpDataBuilder> map = portMap.get(port);
+        if (null == map || map.isEmpty()) {
+            if (TcpLibConfig.getInstance().isDebugMode()) {
+                Log.w(TAG, "服务端端口: " + port + ", 服务端没有客户端连接");
+            }
+            return;
+        }
+        TcpDataBuilder disposeBuilder = map.get(address);
+        if (null == disposeBuilder) {
+            return;
+        }
+        try {
+            disposeBuilder.getSocket().close();
+        } catch (IOException e) {
+            if (TcpLibConfig.getInstance().isDebugMode()) {
+                Log.e(TAG, "服务端端口: " + port + ", " +
+                        "客户端: " + address + ", 关闭客户端时出现异常", e);
+            }
+        }
+    }
+
+    /**
      * 获取指定端口服务器的在线客户端数量
      *
      * @param port 指定端口服务器
@@ -184,21 +215,21 @@ public class TcpLibService {
      */
     public void sendMessage(int port, String address, byte[] contentBytes) {
         if (!isRun(port)) {
-            if(TcpLibConfig.getInstance().isDebugMode()) {
+            if (TcpLibConfig.getInstance().isDebugMode()) {
                 Log.w(TAG, "服务端端口: " + port + ", 服务端未启动");
             }
             return;
         }
         Map<String, TcpDataBuilder> map = portMap.get(port);
         if (null == map || map.isEmpty()) {
-            if(TcpLibConfig.getInstance().isDebugMode()) {
+            if (TcpLibConfig.getInstance().isDebugMode()) {
                 Log.w(TAG, "服务端端口: " + port + ", 服务端没有客户端连接");
             }
             return;
         }
         TcpDataBuilder disposeBuilder = map.get(address);
         if (null == disposeBuilder) {
-            if(TcpLibConfig.getInstance().isDebugMode()) {
+            if (TcpLibConfig.getInstance().isDebugMode()) {
                 Log.w(TAG, "服务端端口: " + port + ", " +
                         "客户端: " + address + ", 指定客户端未连接服务器");
             }
@@ -210,7 +241,7 @@ public class TcpLibService {
                 outputStream.write(disposeBuilder.getDataGenerate().generate(contentBytes));
                 outputStream.flush();
             } catch (IOException e) {
-                if(TcpLibConfig.getInstance().isDebugMode()) {
+                if (TcpLibConfig.getInstance().isDebugMode()) {
                     Log.e(TAG, "服务端端口: " + port + ", " +
                             "客户端: " + address + ", 向指定客户端发送消息异常", e);
                 }
@@ -226,14 +257,14 @@ public class TcpLibService {
      */
     public void sendAllClientMessage(int port, byte[] contentBytes) {
         if (!isRun(port)) {
-            if(TcpLibConfig.getInstance().isDebugMode()) {
+            if (TcpLibConfig.getInstance().isDebugMode()) {
                 Log.w(TAG, "服务端端口: " + port + ", 服务端未启动");
             }
             return;
         }
         Map<String, TcpDataBuilder> map = portMap.get(port);
         if (null == map || map.isEmpty()) {
-            if(TcpLibConfig.getInstance().isDebugMode()) {
+            if (TcpLibConfig.getInstance().isDebugMode()) {
                 Log.w(TAG, "服务端端口: " + port + ", 服务端没有客户端连接");
             }
             return;
@@ -241,7 +272,7 @@ public class TcpLibService {
         for (String address : map.keySet()) {
             TcpDataBuilder disposeBuilder = map.get(address);
             if (null == disposeBuilder) {
-                if(TcpLibConfig.getInstance().isDebugMode()) {
+                if (TcpLibConfig.getInstance().isDebugMode()) {
                     Log.w(TAG, "服务端端口: " + port + ", " +
                             "客户端: " + address + ", 指定客户端未连接服务器");
                 }
@@ -253,7 +284,7 @@ public class TcpLibService {
                     outputStream.write(disposeBuilder.getDataGenerate().generate(contentBytes));
                     outputStream.flush();
                 } catch (IOException e) {
-                    if(TcpLibConfig.getInstance().isDebugMode()) {
+                    if (TcpLibConfig.getInstance().isDebugMode()) {
                         Log.e(TAG, "服务端端口: " + port + ", " +
                                 "客户端: " + address + ", 向指定客户端发送消息异常", e);
                     }
@@ -271,21 +302,21 @@ public class TcpLibService {
      */
     public void sendMessage(int port, String address, String content) {
         if (!isRun(port)) {
-            if(TcpLibConfig.getInstance().isDebugMode()) {
+            if (TcpLibConfig.getInstance().isDebugMode()) {
                 Log.w(TAG, "服务端端口: " + port + ", 服务端未启动");
             }
             return;
         }
         Map<String, TcpDataBuilder> map = portMap.get(port);
         if (null == map || map.isEmpty()) {
-            if(TcpLibConfig.getInstance().isDebugMode()) {
+            if (TcpLibConfig.getInstance().isDebugMode()) {
                 Log.w(TAG, "服务端端口: " + port + ", 服务端没有客户端连接");
             }
             return;
         }
         TcpDataBuilder disposeBuilder = map.get(address);
         if (null == disposeBuilder) {
-            if(TcpLibConfig.getInstance().isDebugMode()) {
+            if (TcpLibConfig.getInstance().isDebugMode()) {
                 Log.w(TAG, "服务端端口: " + port + ", " +
                         "客户端: " + address + ", 指定客户端未连接服务器");
             }
@@ -297,7 +328,7 @@ public class TcpLibService {
                 outputStream.write(disposeBuilder.getDataGenerate().generate(content));
                 outputStream.flush();
             } catch (IOException e) {
-                if(TcpLibConfig.getInstance().isDebugMode()) {
+                if (TcpLibConfig.getInstance().isDebugMode()) {
                     Log.e(TAG, "服务端端口: " + port + ", " +
                             "客户端: " + address + ", 向指定客户端发送消息异常", e);
                 }
@@ -313,14 +344,14 @@ public class TcpLibService {
      */
     public void sendAllClientMessage(int port, String content) {
         if (!isRun(port)) {
-            if(TcpLibConfig.getInstance().isDebugMode()) {
+            if (TcpLibConfig.getInstance().isDebugMode()) {
                 Log.w(TAG, "服务端端口: " + port + ", 服务端未启动");
             }
             return;
         }
         Map<String, TcpDataBuilder> map = portMap.get(port);
         if (null == map || map.isEmpty()) {
-            if(TcpLibConfig.getInstance().isDebugMode()) {
+            if (TcpLibConfig.getInstance().isDebugMode()) {
                 Log.w(TAG, "服务端端口: " + port + ", 服务端没有客户端连接");
             }
             return;
@@ -328,7 +359,7 @@ public class TcpLibService {
         for (String address : map.keySet()) {
             TcpDataBuilder disposeBuilder = map.get(address);
             if (null == disposeBuilder) {
-                if(TcpLibConfig.getInstance().isDebugMode()) {
+                if (TcpLibConfig.getInstance().isDebugMode()) {
                     Log.w(TAG, "服务端端口: " + port + ", " +
                             "客户端: " + address + ", 指定客户端未连接服务器");
                 }
@@ -340,7 +371,7 @@ public class TcpLibService {
                     outputStream.write(disposeBuilder.getDataGenerate().generate(content));
                     outputStream.flush();
                 } catch (IOException e) {
-                    if(TcpLibConfig.getInstance().isDebugMode()) {
+                    if (TcpLibConfig.getInstance().isDebugMode()) {
                         Log.e(TAG, "服务端端口: " + port + ", " +
                                 "客户端: " + address + ", 向指定客户端发送消息异常", e);
                     }

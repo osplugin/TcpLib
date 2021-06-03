@@ -43,13 +43,27 @@
             android:textColor="@color/white" />
 
         <TextView
-            android:id="@+id/close"
+            android:id="@+id/closeClient"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="10dp"
             android:layout_marginLeft="10dp"
             android:layout_toEndOf="@+id/send"
             android:layout_toRightOf="@+id/send"
+            android:background="@color/black"
+            android:onClick="@{click::onClick}"
+            android:padding="20dp"
+            android:text="关闭客户端"
+            android:textColor="@color/white" />
+
+        <TextView
+            android:id="@+id/close"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_marginLeft="10dp"
+            android:layout_toEndOf="@+id/closeClient"
+            android:layout_toRightOf="@+id/closeClient"
             android:background="@color/black"
             android:onClick="@{click::onClick}"
             android:padding="20dp"

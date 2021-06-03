@@ -1,17 +1,17 @@
-package com.mjsoftking.tcpserviceapp.test;
+package com.mjsoftking.tcpclient.test.generate;
 
 import com.mjsoftking.tcplib.dispose.TcpBaseDataGenerate;
 
 import java.nio.charset.Charset;
 
 /**
- * 用途：发送数据是的报文生成器
- * 按照报文格式生成报文数据
+ * 用途：
  * <p>
- * 作者：mjSoftKing
- * 时间：2021/02/22
+ * 作者：MJSoftKing
+ * 时间：2021/06/02
  */
-public class DataGenerate implements TcpBaseDataGenerate {
+public class ClientDataGenerate implements TcpBaseDataGenerate {
+
 
     @Override
     public byte[] generate(String content) {

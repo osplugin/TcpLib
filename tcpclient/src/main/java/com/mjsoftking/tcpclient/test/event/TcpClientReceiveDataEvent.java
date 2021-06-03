@@ -1,4 +1,4 @@
-package com.mjsoftking.tcpserviceapp.test.event;
+package com.mjsoftking.tcpclient.test.event;
 
 import com.mjsoftking.tcplib.event.TcpBaseEvent;
 
