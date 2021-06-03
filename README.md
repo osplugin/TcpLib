@@ -1,11 +1,13 @@
 # TcpLibApp
 
 #### 介绍
-安卓 Java tcp提炼封装工具,仍在开发中，目前已支持一台手机建立多个端口监听服务器且使用各自的报文处理规则，一个手机对多个端口服务器进行连接且使用各自的报文处理规则
+安卓 Java tcp提炼封装工具,仍在开发中，目前已支持一台手机建立多个端口监听服务器且使用各自的报文处理规则，一个手机对多个端口服务器进行连接且使用各自的报文处理规则。
 
 #### 一、项目介绍
-1. APP 使用示例项目，libs下含有以编译最新的aar资源。
-2. TcpLib arr资源项目，需要引入的资源包项目。
+1. APP 使用示例项目，libs下含有已编译最新的aar资源。
+2.  **TcpLib**  arr资源项目，需要引入的资源包项目。
+3.  **TcpService**  为APP类型，服务端演示程序。
+4.  **tcpclient**  为APP类型，客户端演示程序。 
 
 #### 二、工程引入工具包
 下载项目，可以在APP项目的libs文件下找到*.aar文件（已编译为最新版），选择其中一个引入自己的工程
@@ -70,7 +72,7 @@ public class DataGenerate implements TcpBaseDataGenerate {
     }
 }
 ```
-#### 五、服务的启动与关闭
+#### 五、服务的使用
  **- 服务启动，需提供启动的端口号** 
 
 ```
@@ -85,7 +87,7 @@ TcpLibService.getInstance()
 int port = 50000;
 TcpLibService.getInstance().close(port);
 ```
-#### 六、服务的启动、客户端连接的事件处理
+ **1. 服务的启动、客户端事件处理** 
 
  **在任意对象下，创建实例时，以下以activity为例** 
 
@@ -142,7 +144,7 @@ TcpLibService.getInstance().close(port);
     }
 ```
 
-#### 七、服务端向客户端发送消息
+ **2. 服务端向客户端发送消息** 
 
 ```
 int port = 50000;//服务端启动服务的端口
@@ -150,18 +152,111 @@ String address = "127.0.0.1:1233"; //服务端收到客户端连接事件时的�
 String content = "数据";//此参数会进入TcpBaseDataGenerate 实现内，根据具体业务定义数据类型
 TcpLibService.getInstance().sendMessage(port, address, content);
 ```
-#### 八、服务端其他api
+ **3. 服务端其他api** 
 
 TcpLibService提供以下api
 ```
 获取指定端口服务器是否在运行
-boolean isRun(int port)｛｝
+boolean isRun(int port){}
 ```
 ```
 获取指定端口服务器的在线客户端数量，在线客户端数；-1:服务器未启动，反之为在线数量
-int getOnlineClientCount(int port)｛｝
+int getOnlineClientCount(int port){}
 ```
 ```
 获取指定端口服务器的在线客户端，返回：null:服务器未启动，反之为在线客户端的ip:port形式列表，此内容可以直接在服务器向其发送数据
-List<String> getOnlineClient(int port)｛｝
+List<String> getOnlineClient(int port){}
+```
+
+```
+关闭指定端口服务器下的客户端连接
+void closeClient(int port, String address) {}
+```
+
+#### 六、客户端的使用
+
+**- 客户端启动，需提供IP和端口号** 
+
+```
+Sting address = "127.0.0.1";
+int port = 50000;
+TcpLibClient.getInstance()
+                   .connect(address, port ),
+                            TcpDataBuilder.builder(new ClientDataGenerate(), new ClientDataDispose()));
+```
+
+ **- 客户端关闭，关闭时需提供IP和端口号** 
+
+```
+Sting address = "127.0.0.1";
+int port = 50000;
+TcpLibClient.getInstance()
+                    .close(address, port);
+```
+**1. 客户端的启动、客户端事件处理** 
+
+ **在任意对象下，创建实例时，以下以activity为例** 
+
+- 注册EventBus
+```
+ @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        EventBus.getDefault().register(this);
+        ...
+
+    }
+```
+- 接收EventBus事件
+```
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void eventFun(TcpBaseEvent et) {
+        //todo 自行处理的报文数据分发事件
+        if (et instanceof TcpClientReceiveDataEvent) {
+            TcpClientReceiveDataEvent event = (TcpClientReceiveDataEvent) et;
+            Log.w(TAG, "服务端端口: " + event.getServicePort() + ", 服务端地址: " + event.getAddress() + ", 接收到数据: " + event.getMessage());
+        }
+        //todo 连接服务成功
+        else if (et instanceof TcpServiceConnectSuccessEvent) {
+            Log.w(TAG, "连接服务成功，服务端端口: " + et.getServicePort() + ", 服务端地址: " + et.getAddress());
+        }
+        //todo 连接服务失败
+        else if (et instanceof TcpServiceConnectFailEvent) {
+           Log.w(TAG, "连接服务失败，服务端端口: " + et.getServicePort() + ", 服务端地址: " + et.getAddress());
+        }
+        //todo 连接关闭
+        else if (et instanceof TcpServiceDisconnectEvent) {
+           Log.w(TAG, "连接关闭，服务端端口: " + et.getServicePort() + ", 服务端地址: " + et.getAddress());
+        }
+    }
+
+```
+- 注销EventBus
+
+```
+ @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        EventBus.getDefault().unregister(this);
+    }
+```
+
+ **2. 客户端向服务端发送消息** 
+
+```
+int port = 50000;//服务端启动服务的端口
+String address = "127.0.0.1"; //服务端IP地址。
+String content = "数据";//此参数会进入TcpBaseDataGenerate 实现内，根据具体业务定义数据类型
+TcpLibClient.getInstance().sendMessage(address, port, content);
+```
+ **3. 服务端其他api** 
+
+TcpLibClient提供以下api
+```
+获取是否指定的服务器处于连接状态
+boolean boolean isConnect(String ipAddress, int port) {}
+```
+```
+关闭与指定服务器的连接
+void close(String ipAddress, int port)
 ```
