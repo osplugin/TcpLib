@@ -15,7 +15,7 @@
 ```
 dependencies {
    //引入tcplib.aar资源
-   implementation files('libs/tcplib.aar')
+   implementation fileTree(dir: 'libs', include: ['tcplib.aar'])
    //eventbus，引入后你的项目将支持EventBus，EventBus是一种用于Android的事件发布-订阅总线，替代广播的传值方式，使用方法可以度娘查询。
    implementation 'org.greenrobot:eventbus:3.2.0'
    ...
