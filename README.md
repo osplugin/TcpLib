@@ -105,6 +105,7 @@ TcpLibService.getInstance().close(port);
 ```
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void eventFun(TcpBaseEvent et) {
+        //服务端的事件在com.mjsoftking.tcplib.event.service包下
         //todo 自行处理的报文数据分发事件，
         if (et instanceof TcpServiceReceiveDataEvent) {
             TcpServiceReceiveDataEvent event = (TcpServiceReceiveDataEvent) et;
@@ -131,6 +132,12 @@ TcpLibService.getInstance().close(port);
         //todo 客户端下线
         else if (et instanceof TcpClientDisconnectEvent) {
             Log.w(TAG, String.format("客户端连接断开，服务端口：%d, 客户端地址：%s", et.getServicePort(), et.getAddress()));
+        }
+        //todo 服务端发送消息事件
+        else if (et instanceof TcpServiceSendMessageEvent) {
+            //contentStr字符串为发送的消息字符串，contentBytes为发送消息的bute[]数据，按照发送消息的内容类型，2个参数仅有一个不为null
+            TcpServiceSendMessageEvent event = (TcpServiceSendMessageEvent) et;
+            Log.w(TAG, String.format("服务端发送消息，服务端口：%d, 客户端地址：%s，发送消息内容：%s", event.getServicePort(), event.getAddress(), event.getContentStr());
         }
     }
 ```
@@ -210,6 +217,7 @@ TcpLibClient.getInstance()
 ```
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void eventFun(TcpBaseEvent et) {
+        //客户端的事件在com.mjsoftking.tcplib.event.client包下
         //todo 自行处理的报文数据分发事件
         if (et instanceof TcpClientReceiveDataEvent) {
             TcpClientReceiveDataEvent event = (TcpClientReceiveDataEvent) et;
@@ -226,6 +234,12 @@ TcpLibClient.getInstance()
         //todo 连接关闭
         else if (et instanceof TcpServiceDisconnectEvent) {
            Log.w(TAG, "连接关闭，服务端端口: " + et.getServicePort() + ", 服务端地址: " + et.getAddress());
+        }
+        //todo 客户端发送消息事件
+        else if (et instanceof TcpClientSendMessageEvent) {
+            //contentStr字符串为发送的消息字符串，contentBytes为发送消息的bute[]数据，按照发送消息的内容类型，2个参数仅有一个不为null
+            TcpClientSendMessageEvent event = (TcpClientSendMessageEvent) et;
+            Log.w(TAG, String.format("客户端发送消息，服务端口：%d, 服务端地址：%s，发送消息内容：%s", event.getServicePort(), event.getAddress(), event.getContentStr());
         }
     }
 

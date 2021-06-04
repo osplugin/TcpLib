@@ -13,8 +13,20 @@ public abstract class TcpBaseEvent implements Serializable {
     protected int servicePort;
     protected String address;
 
+    /**
+     * @param servicePort 服务端口
+     * @param address     地址，ip:port
+     */
     public TcpBaseEvent(int servicePort, String address) {
         this.servicePort = servicePort;
+        this.address = address;
+    }
+
+    /**
+     * @param address 地址，ip:port
+     */
+    public TcpBaseEvent(String address) {
+        this.servicePort = Integer.parseInt(address.split(":")[1]);
         this.address = address;
     }
 

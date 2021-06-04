@@ -18,11 +18,7 @@ public class ClientDataDispose implements TcpBaseDataDispose {
 
     @Override
     public void dispose(ByteQueueList bufferQueue, int servicePort, String clientAddress) {
-        byte[] b = new byte[bufferQueue.size()];
-        for (int i = 0; i < bufferQueue.size(); ++i) {
-            b[i] = bufferQueue.get(i);
-        }
+        byte[] b = bufferQueue.copyAndRemove(bufferQueue.size());
         EventBus.getDefault().post(new TcpClientReceiveDataEvent(servicePort, clientAddress, new String(b)));
-        bufferQueue.clear();
     }
 }

@@ -22,6 +22,7 @@ import com.mjsoftking.tcplib.event.service.TcpClientDisconnectEvent;
 import com.mjsoftking.tcplib.event.service.TcpServiceBindFailEvent;
 import com.mjsoftking.tcplib.event.service.TcpServiceBindSuccessEvent;
 import com.mjsoftking.tcplib.event.service.TcpServiceCloseEvent;
+import com.mjsoftking.tcplib.event.service.TcpServiceSendMessageEvent;
 import com.mjsoftking.tcpserviceapp.adapter.ClientAdapter;
 import com.mjsoftking.tcpserviceapp.bean.Client;
 import com.mjsoftking.tcpserviceapp.databinding.ActivityMainBinding;
@@ -55,6 +56,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         binding.setClick(this);
         binding.setIsConnect(false);
         binding.setSelect(false);
+        binding.setEtPort("50000");
 
         adapter = new ClientAdapter(this);
         binding.list.setAdapter(adapter);
@@ -159,6 +161,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             refreshClient();
             printf(String.format(Locale.getDefault(),
                     "客户端连接断开，服务端口：%d, 客户端地址：%s", et.getServicePort(), et.getAddress()), true);
+        }
+        //todo 服务端发送消息事件
+        else if (et instanceof TcpServiceSendMessageEvent) {
+            TcpServiceSendMessageEvent event = (TcpServiceSendMessageEvent) et;
+            printf("发送消息: " + event.getContentStr(), false);
         }
     }
 

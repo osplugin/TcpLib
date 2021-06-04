@@ -20,6 +20,7 @@ import com.mjsoftking.tcplib.TcpLibClient;
 import com.mjsoftking.tcplib.TcpLibConfig;
 import com.mjsoftking.tcplib.dispose.TcpDataBuilder;
 import com.mjsoftking.tcplib.event.TcpBaseEvent;
+import com.mjsoftking.tcplib.event.client.TcpClientSendMessageEvent;
 import com.mjsoftking.tcplib.event.client.TcpServiceConnectFailEvent;
 import com.mjsoftking.tcplib.event.client.TcpServiceConnectSuccessEvent;
 import com.mjsoftking.tcplib.event.client.TcpServiceDisconnectEvent;
@@ -49,6 +50,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main);
         binding.setClick(this);
         binding.setIsConnect(false);
+
+        binding.setEtIp("127.0.0.1");
+        binding.setEtPort("50000");
     }
 
     @Override
@@ -62,22 +66,27 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         //todo 自行处理的报文数据分发事件
         if (et instanceof TcpClientReceiveDataEvent) {
             TcpClientReceiveDataEvent event = (TcpClientReceiveDataEvent) et;
-            printf("服务端端口: " + event.getServicePort() + ", 地址: " + event.getAddress() + ", 接收到数据: " + event.getMessage() ,false);
+            printf("服务端端口: " + event.getServicePort() + ", 地址: " + event.getAddress() + ", 接收到数据: " + event.getMessage(), false);
         }
         //todo 连接服务成功
         else if (et instanceof TcpServiceConnectSuccessEvent) {
             binding.setIsConnect(true);
-            printf("连接服务端成功, 服务端地址:  " + et.getAddress() ,false);
+            printf("连接服务端成功, 服务端地址:  " + et.getAddress(), false);
         }
         //todo 连接服务失败
         else if (et instanceof TcpServiceConnectFailEvent) {
             binding.setIsConnect(false);
-            printf("连接服务端失败, 服务端地址:  " + et.getAddress() ,true);
+            printf("连接服务端失败, 服务端地址:  " + et.getAddress(), true);
         }
         //todo 连接服务关闭
         else if (et instanceof TcpServiceDisconnectEvent) {
             binding.setIsConnect(false);
-            printf("与服务端连接关闭, 服务端地址:  " + et.getAddress() ,true);
+            printf("与服务端连接关闭, 服务端地址:  " + et.getAddress(), true);
+        }
+        //todo 客户端发送消息事件
+        else if (et instanceof TcpClientSendMessageEvent) {
+            TcpClientSendMessageEvent event = (TcpClientSendMessageEvent) et;
+            printf("发送消息: " + event.getContentStr(), false);
         }
     }
 
@@ -126,7 +135,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 return;
             }
             TcpLibClient.getInstance().sendMessage(binding.getEtIp(), Integer.parseInt(binding.getEtPort()), binding.getEtContent());
-            printf("发送消息: " + binding.getEtContent(), false);
         }
     }
 

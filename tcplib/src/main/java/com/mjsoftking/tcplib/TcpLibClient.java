@@ -5,6 +5,7 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 
 import com.mjsoftking.tcplib.dispose.TcpDataBuilder;
+import com.mjsoftking.tcplib.event.client.TcpClientSendMessageEvent;
 import com.mjsoftking.tcplib.event.client.TcpServiceConnectFailEvent;
 import com.mjsoftking.tcplib.event.client.TcpServiceConnectSuccessEvent;
 import com.mjsoftking.tcplib.thread.TcpDataReceiveThread;
@@ -174,6 +175,9 @@ public class TcpLibClient {
                 OutputStream outputStream = disposeBuilder.getSocket().getOutputStream();
                 outputStream.write(disposeBuilder.getDataGenerate().generate(content));
                 outputStream.flush();
+
+                //发送消息发送成功事件
+                EventBus.getDefault().post(new TcpClientSendMessageEvent(address, content));
             } catch (IOException e) {
                 if (TcpLibConfig.getInstance().isDebugMode()) {
                     Log.e(TAG, "服务端端口: " + address + ", 向指定服务端发送消息异常", e);
@@ -224,6 +228,9 @@ public class TcpLibClient {
                 OutputStream outputStream = disposeBuilder.getSocket().getOutputStream();
                 outputStream.write(disposeBuilder.getDataGenerate().generate(content));
                 outputStream.flush();
+
+                //发送消息发送成功事件
+                EventBus.getDefault().post(new TcpClientSendMessageEvent(address, content));
             } catch (IOException e) {
                 if (TcpLibConfig.getInstance().isDebugMode()) {
                     Log.e(TAG, "服务端端口: " + address + ", 向指定服务端发送消息异常", e);

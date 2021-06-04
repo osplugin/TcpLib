@@ -7,6 +7,7 @@ import androidx.annotation.NonNull;
 import com.mjsoftking.tcplib.dispose.TcpDataBuilder;
 import com.mjsoftking.tcplib.event.service.TcpServiceBindFailEvent;
 import com.mjsoftking.tcplib.event.service.TcpServiceBindSuccessEvent;
+import com.mjsoftking.tcplib.event.service.TcpServiceSendMessageEvent;
 import com.mjsoftking.tcplib.thread.TcpServiceAcceptThread;
 
 import org.greenrobot.eventbus.EventBus;
@@ -240,6 +241,9 @@ public class TcpLibService {
                 OutputStream outputStream = disposeBuilder.getSocket().getOutputStream();
                 outputStream.write(disposeBuilder.getDataGenerate().generate(contentBytes));
                 outputStream.flush();
+
+                //发送消息发送成功事件
+                EventBus.getDefault().post(new TcpServiceSendMessageEvent(address, contentBytes));
             } catch (IOException e) {
                 if (TcpLibConfig.getInstance().isDebugMode()) {
                     Log.e(TAG, "服务端端口: " + port + ", " +
@@ -270,26 +274,7 @@ public class TcpLibService {
             return;
         }
         for (String address : map.keySet()) {
-            TcpDataBuilder disposeBuilder = map.get(address);
-            if (null == disposeBuilder) {
-                if (TcpLibConfig.getInstance().isDebugMode()) {
-                    Log.w(TAG, "服务端端口: " + port + ", " +
-                            "客户端: " + address + ", 指定客户端未连接服务器");
-                }
-                return;
-            }
-            new Thread(() -> {
-                try {
-                    OutputStream outputStream = disposeBuilder.getSocket().getOutputStream();
-                    outputStream.write(disposeBuilder.getDataGenerate().generate(contentBytes));
-                    outputStream.flush();
-                } catch (IOException e) {
-                    if (TcpLibConfig.getInstance().isDebugMode()) {
-                        Log.e(TAG, "服务端端口: " + port + ", " +
-                                "客户端: " + address + ", 向指定客户端发送消息异常", e);
-                    }
-                }
-            }).start();
+            sendMessage(port, address, contentBytes);
         }
     }
 
@@ -327,6 +312,8 @@ public class TcpLibService {
                 OutputStream outputStream = disposeBuilder.getSocket().getOutputStream();
                 outputStream.write(disposeBuilder.getDataGenerate().generate(content));
                 outputStream.flush();
+                //发送消息发送成功事件
+                EventBus.getDefault().post(new TcpServiceSendMessageEvent(address, content));
             } catch (IOException e) {
                 if (TcpLibConfig.getInstance().isDebugMode()) {
                     Log.e(TAG, "服务端端口: " + port + ", " +
@@ -357,26 +344,7 @@ public class TcpLibService {
             return;
         }
         for (String address : map.keySet()) {
-            TcpDataBuilder disposeBuilder = map.get(address);
-            if (null == disposeBuilder) {
-                if (TcpLibConfig.getInstance().isDebugMode()) {
-                    Log.w(TAG, "服务端端口: " + port + ", " +
-                            "客户端: " + address + ", 指定客户端未连接服务器");
-                }
-                return;
-            }
-            new Thread(() -> {
-                try {
-                    OutputStream outputStream = disposeBuilder.getSocket().getOutputStream();
-                    outputStream.write(disposeBuilder.getDataGenerate().generate(content));
-                    outputStream.flush();
-                } catch (IOException e) {
-                    if (TcpLibConfig.getInstance().isDebugMode()) {
-                        Log.e(TAG, "服务端端口: " + port + ", " +
-                                "客户端: " + address + ", 向指定客户端发送消息异常", e);
-                    }
-                }
-            }).start();
+            sendMessage(port, address, content);
         }
     }
 
