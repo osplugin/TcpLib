@@ -159,7 +159,7 @@ public class TcpLibClient {
      * 向指定的服务端按照指定数据格式发送数据
      *
      * @param address 服务端地址，ip:port 形式，如：0.0.0.0:30000
-     * @param content 包含指令的数据或实际字符串数据
+     * @param content 需要发送的原始数据
      */
     public void sendMessage(String address, Object content) {
         TcpDataBuilder disposeBuilder = SERVICE_MAP.get(address);
@@ -191,7 +191,7 @@ public class TcpLibClient {
      *
      * @param ipAddress 服务端ip
      * @param port      端口
-     * @param content   包含指令的数据或实际字符串数据
+     * @param content   需要发送的原始数据
      */
     public void sendMessage(String ipAddress, int port, Object content) {
         sendMessage(String.format(Locale.getDefault(), IP_ADDRESS, ipAddress, port), content);
@@ -200,7 +200,7 @@ public class TcpLibClient {
     /**
      * 向所有已连接的服务端按照指定数据格式发送数据
      *
-     * @param content 包含指令的数据或实际字符串数据
+     * @param content 需要发送的原始数据
      */
     public void sendAllMessage(Object content) {
         for (String address : SERVICE_MAP.keySet()) {
@@ -208,56 +208,4 @@ public class TcpLibClient {
         }
     }
 
-    /**
-     * 向指定的服务端按照指定数据格式发送数据
-     *
-     * @param address 服务端地址，ip:port 形式，如：0.0.0.0:30000
-     * @param content 内容
-     */
-    public void sendMessage(String address, byte[] content) {
-        TcpDataBuilder disposeBuilder = SERVICE_MAP.get(address);
-        if (null == disposeBuilder) {
-            if (TcpLibConfig.getInstance().isDebugMode()) {
-                Log.w(TAG, "服务端端口: " + address + ", 指定服务端未连接");
-            }
-            return;
-        }
-
-        new Thread(() -> {
-            try {
-                OutputStream outputStream = disposeBuilder.getSocket().getOutputStream();
-                outputStream.write(disposeBuilder.getDataGenerate().generate(content));
-                outputStream.flush();
-
-                //发送消息发送成功事件
-                EventBus.getDefault().post(new TcpClientSendMessageEvent(address, content));
-            } catch (IOException e) {
-                if (TcpLibConfig.getInstance().isDebugMode()) {
-                    Log.e(TAG, "服务端端口: " + address + ", 向指定服务端发送消息异常", e);
-                }
-            }
-        }).start();
-    }
-
-    /**
-     * 向指定的服务端按照指定数据格式发送数据
-     *
-     * @param ipAddress 服务端ip
-     * @param port      端口
-     * @param content   内容
-     */
-    public void sendMessage(String ipAddress, int port, byte[] content) {
-        sendMessage(String.format(Locale.getDefault(), IP_ADDRESS, ipAddress, port), content);
-    }
-
-    /**
-     * 向所有已连接的服务端按照指定数据格式发送数据
-     *
-     * @param content 内容
-     */
-    public void sendAllMessage(byte[] content) {
-        for (String address : SERVICE_MAP.keySet()) {
-            sendMessage(address, content);
-        }
-    }
 }

@@ -210,80 +210,9 @@ public class TcpLibService {
     /**
      * 向指定的客户端按照指定数据格式发送数据
      *
-     * @param port         指定服务器端口号，使用此端口启动的服务发起数据发送
-     * @param address      在线客户端地址带端口号
-     * @param contentBytes 内容
-     */
-    public void sendMessage(int port, String address, byte[] contentBytes) {
-        if (!isRun(port)) {
-            if (TcpLibConfig.getInstance().isDebugMode()) {
-                Log.w(TAG, "服务端端口: " + port + ", 服务端未启动");
-            }
-            return;
-        }
-        Map<String, TcpDataBuilder> map = portMap.get(port);
-        if (null == map || map.isEmpty()) {
-            if (TcpLibConfig.getInstance().isDebugMode()) {
-                Log.w(TAG, "服务端端口: " + port + ", 服务端没有客户端连接");
-            }
-            return;
-        }
-        TcpDataBuilder disposeBuilder = map.get(address);
-        if (null == disposeBuilder) {
-            if (TcpLibConfig.getInstance().isDebugMode()) {
-                Log.w(TAG, "服务端端口: " + port + ", " +
-                        "客户端: " + address + ", 指定客户端未连接服务器");
-            }
-            return;
-        }
-        new Thread(() -> {
-            try {
-                OutputStream outputStream = disposeBuilder.getSocket().getOutputStream();
-                outputStream.write(disposeBuilder.getDataGenerate().generate(contentBytes));
-                outputStream.flush();
-
-                //发送消息发送成功事件
-                EventBus.getDefault().post(new TcpServiceSendMessageEvent(address, contentBytes));
-            } catch (IOException e) {
-                if (TcpLibConfig.getInstance().isDebugMode()) {
-                    Log.e(TAG, "服务端端口: " + port + ", " +
-                            "客户端: " + address + ", 向指定客户端发送消息异常", e);
-                }
-            }
-        }).start();
-    }
-
-    /**
-     * 通过指定服务器向与此服务器连接的所有客户端按照指定数据格式发送数据
-     *
-     * @param port         指定服务器端口号，使用此端口启动的服务发起数据发送
-     * @param contentBytes 内容
-     */
-    public void sendAllClientMessage(int port, byte[] contentBytes) {
-        if (!isRun(port)) {
-            if (TcpLibConfig.getInstance().isDebugMode()) {
-                Log.w(TAG, "服务端端口: " + port + ", 服务端未启动");
-            }
-            return;
-        }
-        Map<String, TcpDataBuilder> map = portMap.get(port);
-        if (null == map || map.isEmpty()) {
-            if (TcpLibConfig.getInstance().isDebugMode()) {
-                Log.w(TAG, "服务端端口: " + port + ", 服务端没有客户端连接");
-            }
-            return;
-        }
-        for (String address : map.keySet()) {
-            sendMessage(port, address, contentBytes);
-        }
-    }
-
-    /**
-     * 向指定的客户端按照指定数据格式发送数据
-     *
      * @param port    指定服务器端口号，使用此端口启动的服务发起数据发送
      * @param address 在线客户端地址带端口号
-     * @param content 包含指令的数据或实际字符串数据
+     * @param content 需要发送的原始数据
      */
     public void sendMessage(int port, String address, Object content) {
         if (!isRun(port)) {
@@ -327,7 +256,7 @@ public class TcpLibService {
      * 通过指定服务器向与此服务器连接的所有客户端按照指定数据格式发送数据
      *
      * @param port    指定服务器端口号，使用此端口启动的服务发起数据发送
-     * @param content 包含指令的数据或实际字符串数据
+     * @param content 需要发送的原始数据
      */
     public void sendAllClientMessage(int port, Object content) {
         if (!isRun(port)) {

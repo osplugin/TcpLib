@@ -46,14 +46,14 @@ public class TcpDataBuilder {
             dataGenerate = new TcpBaseDataGenerate() {
                 @Override
                 public byte[] generate(Object content) {
-                    Log.w(TAG, "未实现数据生成器，使用默认规则-Object");
-                    return content.toString().getBytes(Charset.forName("UTF-8"));
-                }
-
-                @Override
-                public byte[] generate(byte[] contentBytes) {
-                    Log.w(TAG, "未实现数据生成器，使用默认规则-byte[]");
-                    return contentBytes;
+                    Log.w(TAG, "未实现数据生成器，使用默认规则");
+                    if (content instanceof byte[]) {
+                        return (byte[]) content;
+                    } else if (content instanceof String) {
+                        return ((String) content).getBytes(Charset.forName("UTF-8"));
+                    } else {
+                        return content.toString().getBytes(Charset.forName("UTF-8"));
+                    }
                 }
             };
         }
