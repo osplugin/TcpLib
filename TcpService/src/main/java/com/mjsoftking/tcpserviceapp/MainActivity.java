@@ -4,9 +4,11 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.TextUtils;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.databinding.DataBindingUtil;
@@ -84,10 +86,29 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     }
 
+    private long exitTime = 0;
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        // 判断按下的是不是返回键
+        if (keyCode == KeyEvent.KEYCODE_BACK && event.getAction() == KeyEvent.ACTION_DOWN) {
+            if ((System.currentTimeMillis() - exitTime) > (2 * 1000)) {
+                Toast.makeText(getApplicationContext(),
+                        "再按一次退出",
+                        Toast.LENGTH_SHORT).show();
+                exitTime = System.currentTimeMillis();
+            } else {
+                finish();
+            }
+            return true;
+        }
+        return super.onKeyDown(keyCode, event);
+    }
+
     @Override
     protected void onDestroy() {
         super.onDestroy();
         EventBus.getDefault().unregister(this);
+        TcpLibService.getInstance().close(Integer.parseInt(binding.getEtPort()));
     }
 
     @Override
@@ -107,7 +128,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
         //
         else if (v.equals(binding.close)) {
-            //启动服务
+            //关闭服务
             TcpLibService.getInstance().close(Integer.parseInt(binding.getEtPort()));
         }
         //
@@ -123,7 +144,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             TcpLibService.getInstance()
                     .sendMessage(Integer.parseInt(binding.getEtPort()), adapter.getCurrentClient(), binding.getEtContent());
-            printf("发送消息: " + binding.getEtContent(), false);
+//            printf("发送消息: " + binding.getEtContent(), false);
 //            TcpLibClient.getInstance().close("192.168.1.245:8088");
         }
     }
@@ -165,7 +186,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         //todo 服务端发送消息事件
         else if (et instanceof TcpServiceSendMessageEvent) {
             TcpServiceSendMessageEvent event = (TcpServiceSendMessageEvent) et;
-            printf("发送消息: " + event.getContentStr(), false);
+            printf("从服务端端口: " + et.getServicePort() + ", 向客户端地址: "
+                    + et.getAddress() + ", 发送消息: " + event.getContentStr().toString(), false);
         }
     }
 
@@ -174,6 +196,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if (CollectionUtils.isEmpty(clients)) {
             adapter.clearAndRefresh();
         }else {
+            adapter.clear();
             adapter.addAndRefresh(clients);
         }
         adapter.refreshSelect(adapter.getCurrentClient());
