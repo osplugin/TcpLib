@@ -283,9 +283,9 @@ public class TcpLibService {
      *
      * @param port    指定服务器端口号，使用此端口启动的服务发起数据发送
      * @param address 在线客户端地址带端口号
-     * @param content 内容
+     * @param content 包含指令的数据或实际字符串数据
      */
-    public void sendMessage(int port, String address, String content) {
+    public void sendMessage(int port, String address, Object content) {
         if (!isRun(port)) {
             if (TcpLibConfig.getInstance().isDebugMode()) {
                 Log.w(TAG, "服务端端口: " + port + ", 服务端未启动");
@@ -327,9 +327,9 @@ public class TcpLibService {
      * 通过指定服务器向与此服务器连接的所有客户端按照指定数据格式发送数据
      *
      * @param port    指定服务器端口号，使用此端口启动的服务发起数据发送
-     * @param content 内容
+     * @param content 包含指令的数据或实际字符串数据
      */
-    public void sendAllClientMessage(int port, String content) {
+    public void sendAllClientMessage(int port, Object content) {
         if (!isRun(port)) {
             if (TcpLibConfig.getInstance().isDebugMode()) {
                 Log.w(TAG, "服务端端口: " + port + ", 服务端未启动");

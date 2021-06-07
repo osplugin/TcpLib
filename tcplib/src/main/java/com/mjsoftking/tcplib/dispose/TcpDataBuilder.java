@@ -18,9 +18,9 @@ public class TcpDataBuilder {
 
     private final static String TAG = TcpDataBuilder.class.getSimpleName();
     //接收数据报文的处理接口
-    private TcpBaseDataDispose dataDispose;
+    private final TcpBaseDataDispose dataDispose;
     //发送数据报文的生成接口
-    private TcpBaseDataGenerate dataGenerate;
+    private final TcpBaseDataGenerate dataGenerate;
     /**
      * 客户端隧道
      * <p>
@@ -30,6 +30,34 @@ public class TcpDataBuilder {
     private Socket socket;
 
     TcpDataBuilder(TcpBaseDataGenerate dataGenerate, TcpBaseDataDispose dataDispose) {
+        if (null == dataDispose) {
+            dataDispose = (bufferQueue, servicePort, address) -> {
+                Log.w(TAG, "未实现数据解析器，使用默认规则");
+                byte[] b = new byte[bufferQueue.size()];
+                for (int i = 0; i < b.length; ++i) {
+                    b[i] = bufferQueue.get(i);
+                }
+                Log.w(TAG, "地址: " + address + ", 接收到数据: " + Arrays.toString(b));
+                bufferQueue.removeCountFrame(b.length);
+            };
+        }
+
+        if (null == dataGenerate) {
+            dataGenerate = new TcpBaseDataGenerate() {
+                @Override
+                public byte[] generate(Object content) {
+                    Log.w(TAG, "未实现数据生成器，使用默认规则-Object");
+                    return content.toString().getBytes(Charset.forName("UTF-8"));
+                }
+
+                @Override
+                public byte[] generate(byte[] contentBytes) {
+                    Log.w(TAG, "未实现数据生成器，使用默认规则-byte[]");
+                    return contentBytes;
+                }
+            };
+        }
+
         this.dataGenerate = dataGenerate;
         this.dataDispose = dataDispose;
     }
@@ -45,36 +73,10 @@ public class TcpDataBuilder {
     }
 
     public TcpBaseDataDispose getDataDispose() {
-        if (null == dataDispose) {
-            dataDispose = (bufferQueue, servicePort, address) -> {
-                Log.w(TAG, "未实现数据解析器，使用默认规则");
-                byte[] b = new byte[bufferQueue.size()];
-                for (int i = 0; i < b.length; ++i) {
-                    b[i] = bufferQueue.get(i);
-                }
-                Log.w(TAG, "地址: " + address + ", 接收到数据: " + Arrays.toString(b));
-                bufferQueue.removeCountFrame(b.length);
-            };
-        }
         return dataDispose;
     }
 
     public TcpBaseDataGenerate getDataGenerate() {
-        if (null == dataGenerate) {
-            dataGenerate = new TcpBaseDataGenerate() {
-                @Override
-                public byte[] generate(String content) {
-                    Log.w(TAG, "未实现数据生成器，使用默认规则-String");
-                    return content.getBytes(Charset.forName("UTF-8"));
-                }
-
-                @Override
-                public byte[] generate(byte[] contentBytes) {
-                    Log.w(TAG, "未实现数据生成器，使用默认规则-byte[]");
-                    return contentBytes;
-                }
-            };
-        }
         return dataGenerate;
     }
 
@@ -90,6 +92,13 @@ public class TcpDataBuilder {
     public TcpDataBuilder setSocket(Socket socket) {
         this.socket = socket;
         return this;
+    }
+
+    /**
+     * 复制处理规则，返回新对象
+     */
+    public TcpDataBuilder copy() {
+        return new TcpDataBuilder(getDataGenerate(), getDataDispose());
     }
 
 

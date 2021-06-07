@@ -43,16 +43,25 @@ public class TcpDataReceiveThread extends Thread {
      */
     public TcpDataReceiveThread(int servicePort, String address, Map<String, TcpDataBuilder> clientMap, boolean isClient) {
         this.servicePort = servicePort;
-        this.client = clientMap.get(address).getSocket();
+
+        TcpDataBuilder builder = clientMap.get(address);
+        if (null != builder) {
+            this.client = builder.getSocket();
+            this.dataDispose = builder.getDataDispose();
+        } else {
+            this.client = null;
+            this.dataDispose = null;
+        }
         this.address = address;
         this.clientMap = clientMap;
-        this.dataDispose = clientMap.get(address).getDataDispose();
         this.bufferQueue = new ByteQueueList();
         this.isClient = isClient;
     }
 
     @Override
     public void run() {
+        if (null == client) return;
+
         while (true) {
             try {
                 byte[] buffer = new byte[1024 * 1024];

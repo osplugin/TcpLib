@@ -159,9 +159,9 @@ public class TcpLibClient {
      * 向指定的服务端按照指定数据格式发送数据
      *
      * @param address 服务端地址，ip:port 形式，如：0.0.0.0:30000
-     * @param content 内容
+     * @param content 包含指令的数据或实际字符串数据
      */
-    public void sendMessage(String address, String content) {
+    public void sendMessage(String address, Object content) {
         TcpDataBuilder disposeBuilder = SERVICE_MAP.get(address);
         if (null == disposeBuilder) {
             if (TcpLibConfig.getInstance().isDebugMode()) {
@@ -191,18 +191,18 @@ public class TcpLibClient {
      *
      * @param ipAddress 服务端ip
      * @param port      端口
-     * @param content   内容
+     * @param content   包含指令的数据或实际字符串数据
      */
-    public void sendMessage(String ipAddress, int port, String content) {
+    public void sendMessage(String ipAddress, int port, Object content) {
         sendMessage(String.format(Locale.getDefault(), IP_ADDRESS, ipAddress, port), content);
     }
 
     /**
      * 向所有已连接的服务端按照指定数据格式发送数据
      *
-     * @param content 内容
+     * @param content 包含指令的数据或实际字符串数据
      */
-    public void sendAllMessage(String content) {
+    public void sendAllMessage(Object content) {
         for (String address : SERVICE_MAP.keySet()) {
             sendMessage(address, content);
         }

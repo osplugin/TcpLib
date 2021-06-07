@@ -46,7 +46,7 @@ public class TcpServiceAcceptThread extends Thread {
                 Socket client = serverSocket.accept();
                 String address = client.getInetAddress().getHostAddress() + ":" + client.getPort();
                 //存入在线客户端缓存
-                clientMap.put(address, builder.setSocket(client));
+                clientMap.put(address, builder.copy().setSocket(client));
 
                 //发送客户端上线事件
                 EventBus.getDefault().post(new TcpClientConnectEvent(this.servicePort, address));

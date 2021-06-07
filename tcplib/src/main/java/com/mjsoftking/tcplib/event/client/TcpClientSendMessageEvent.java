@@ -14,7 +14,7 @@ public class TcpClientSendMessageEvent extends TcpBaseEvent {
     /**
      * 发送文本数据时，此参数不为null
      */
-    private String contentStr;
+    private Object contentStr;
     /**
      * 发送byte[]数据时，此参数不为null
      */
@@ -28,7 +28,7 @@ public class TcpClientSendMessageEvent extends TcpBaseEvent {
         super(servicePort, address);
     }
 
-    public TcpClientSendMessageEvent(String address, String contentStr) {
+    public TcpClientSendMessageEvent(String address, Object contentStr) {
         super(address);
         this.contentStr = contentStr;
         this.contentBytes = null;
@@ -43,7 +43,7 @@ public class TcpClientSendMessageEvent extends TcpBaseEvent {
     /**
      * 发送文本数据时，此参数不为null
      */
-    public String getContentStr() {
+    public Object getContentStr() {
         return contentStr;
     }
 
