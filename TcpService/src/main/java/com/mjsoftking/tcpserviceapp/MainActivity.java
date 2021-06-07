@@ -187,7 +187,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         else if (et instanceof TcpServiceSendMessageEvent) {
             TcpServiceSendMessageEvent event = (TcpServiceSendMessageEvent) et;
             printf("从服务端端口: " + et.getServicePort() + ", 向客户端地址: "
-                    + et.getAddress() + ", 发送消息: " + event.getContentStr().toString(), false);
+                    + et.getAddress() + ", 发送消息: " + event.getContent().toString(), false);
         }
     }
 
