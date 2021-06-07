@@ -12,45 +12,28 @@ import com.mjsoftking.tcplib.event.TcpBaseEvent;
 public class TcpServiceSendMessageEvent extends TcpBaseEvent {
 
     /**
-     * 发送文本数据时，此参数不为null
+     * 发送的原始数据
      */
-    private Object contentStr;
-    /**
-     * 发送byte[]数据时，此参数不为null
-     */
-    private byte[] contentBytes;
+    private Object content;
 
     /**
      * @param servicePort 服务端口
-     * @param address     服务器地址，serverIp:(serverPort)
+     * @param address     客户端地址，ip:port
      */
     public TcpServiceSendMessageEvent(int servicePort, String address) {
         super(servicePort, address);
     }
 
-    public TcpServiceSendMessageEvent(String address, Object contentStr) {
-        super(address);
-        this.contentStr = contentStr;
-        this.contentBytes = null;
-    }
-
-    public TcpServiceSendMessageEvent(String address, byte[] contentBytes) {
-        super(address);
-        this.contentStr = null;
-        this.contentBytes = contentBytes;
+    public TcpServiceSendMessageEvent(int servicePort, String address, Object content) {
+        super(servicePort, address);
+        this.content = content;
     }
 
     /**
-     * 发送文本数据时，此参数不为null
+     * 发送的原始数据
      */
-    public Object getContentStr() {
-        return contentStr;
+    public Object getContent() {
+        return content;
     }
 
-    /**
-     * 发送byte[]数据时，此参数不为null
-     */
-    public byte[] getContentBytes() {
-        return contentBytes;
-    }
 }

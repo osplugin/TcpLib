@@ -242,7 +242,7 @@ public class TcpLibService {
                 outputStream.write(disposeBuilder.getDataGenerate().generate(content));
                 outputStream.flush();
                 //发送消息发送成功事件
-                EventBus.getDefault().post(new TcpServiceSendMessageEvent(address, content));
+                EventBus.getDefault().post(new TcpServiceSendMessageEvent(port, address, content));
             } catch (IOException e) {
                 if (TcpLibConfig.getInstance().isDebugMode()) {
                     Log.e(TAG, "服务端端口: " + port + ", " +
