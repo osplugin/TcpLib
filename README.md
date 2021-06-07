@@ -42,14 +42,9 @@ public class DataDispose implements TcpBaseDataDispose {
 
     @Override
     public void dispose(ByteQueueList bufferQueue, int servicePort, String clientAddress) {
-        byte[] b = new byte[bufferQueue.size()];
-        for (int i = 0; i < bufferQueue.size(); ++i) {
-            b[i] = bufferQueue.get(i);
-        }
-
+        byte[] b = bufferQueue.copyAndRemove(bufferQueue.size());
         //todo 按照解析后的指令分发事件
         EventBus.getDefault().post(new TcpServiceReceiveDataEvent(servicePort, clientAddress, new String(b)));
-        bufferQueue.clear();
     }
 }
 ```
@@ -62,8 +57,8 @@ public class DataDispose implements TcpBaseDataDispose {
 public class DataGenerate implements TcpBaseDataGenerate {
 
     @Override
-    public byte[] generate(String content) {
-        return content.getBytes(Charset.forName("UTF-8"));
+    public byte[] generate(Object content) {
+        return content.toString().getBytes(Charset.forName("UTF-8"));
     }
 
     @Override
@@ -156,7 +151,7 @@ TcpLibService.getInstance().close(port);
 ```
 int port = 50000;//服务端启动服务的端口
 String address = "127.0.0.1:1233"; //服务端收到客户端连接事件时的地址 （ip:port）形式。
-String content = "数据";//此参数会进入TcpBaseDataGenerate 实现内，根据具体业务定义数据类型
+Object content = "数据";//此参数会进入TcpBaseDataGenerate 实现内，根据具体业务定义数据类型
 TcpLibService.getInstance().sendMessage(port, address, content);
 ```
  **3. 服务端其他api** 
@@ -259,7 +254,7 @@ TcpLibClient.getInstance()
 ```
 int port = 50000;//服务端启动服务的端口
 String address = "127.0.0.1"; //服务端IP地址。
-String content = "数据";//此参数会进入TcpBaseDataGenerate 实现内，根据具体业务定义数据类型
+Object content = "数据";//此参数会进入TcpBaseDataGenerate 实现内，根据具体业务定义数据类型
 TcpLibClient.getInstance().sendMessage(address, port, content);
 ```
  **3. 服务端其他api** 
