@@ -133,7 +133,7 @@ TcpLibService.getInstance().close(port);
         else if (et instanceof TcpServiceSendMessageEvent) {
             //contentStr字符串为发送的消息字符串，contentBytes为发送消息的bute[]数据，按照发送消息的内容类型，2个参数仅有一个不为null
             TcpServiceSendMessageEvent event = (TcpServiceSendMessageEvent) et;
-            Log.w(TAG, String.format("服务端发送消息，服务端口：%d, 客户端地址：%s，发送消息内容：%s", event.getServicePort(), event.getAddress(), event.getContentStr());
+            Log.w(TAG, String.format("服务端发送消息，服务端口：%d, 客户端地址：%s，发送消息内容：%s", event.getServicePort(), event.getAddress(), event.getContent().toString());
         }
     }
 ```
@@ -235,7 +235,7 @@ TcpLibClient.getInstance()
         else if (et instanceof TcpClientSendMessageEvent) {
             //contentStr字符串为发送的消息字符串，contentBytes为发送消息的bute[]数据，按照发送消息的内容类型，2个参数仅有一个不为null
             TcpClientSendMessageEvent event = (TcpClientSendMessageEvent) et;
-            Log.w(TAG, String.format("客户端发送消息，服务端口：%d, 服务端地址：%s，发送消息内容：%s", event.getServicePort(), event.getAddress(), event.getContentStr());
+            Log.w(TAG, String.format("客户端发送消息，服务端口：%d, 服务端地址：%s，发送消息内容：%s", event.getServicePort(), event.getAddress(), event.getContent().toString();
         }
     }
 
