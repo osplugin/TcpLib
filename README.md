@@ -32,7 +32,7 @@ dependencies {
 #### 四、重写服务报文接收及发送处理
  **- 接收报文处理** 
 
-简单示例，也可以定义带报文头、报文尾、数据验证等的处理方式，具体规则完全由自己定义。bufferQueue处理一帧报文后需要在队列中移除这一帧报文数据。
+ **此为简单示例** ，也可以定义带报文头、报文尾、数据验证等的处理方式，具体规则完全由自己定义。bufferQueue处理一帧报文后需要在队列中移除这一帧报文数据。
 必须实现接口 **TcpBaseDataDispose** 
 
 ```
@@ -69,7 +69,7 @@ public class DataGenerate implements TcpBaseDataGenerate {
 }
 ```
 #### 五、服务端的使用
- **- 服务端启动，需提供启动的端口号** 
+ **- 服务端启动，需提供启动的端口号以及报文的处理和生成实现类** 
 
 ```
 int port = 50000;
@@ -131,7 +131,6 @@ TcpLibService.getInstance().close(port);
         }
         //todo 服务端发送消息事件
         else if (et instanceof TcpServiceSendMessageEvent) {
-            //contentStr字符串为发送的消息字符串，contentBytes为发送消息的bute[]数据，按照发送消息的内容类型，2个参数仅有一个不为null
             TcpServiceSendMessageEvent event = (TcpServiceSendMessageEvent) et;
             Log.w(TAG, String.format("服务端发送消息，服务端口：%d, 客户端地址：%s，发送消息内容：%s", event.getServicePort(), event.getAddress(), event.getContent().toString());
         }
@@ -177,7 +176,7 @@ void closeClient(int port, String address) {}
 
 #### 六、客户端的使用
 
-**- 客户端启动，需提供IP和端口号** 
+**- 客户端启动，需提供IP和端口号以及报文的处理和生成实现类** 
 
 ```
 Sting address = "127.0.0.1";
@@ -233,7 +232,6 @@ TcpLibClient.getInstance()
         }
         //todo 客户端发送消息事件
         else if (et instanceof TcpClientSendMessageEvent) {
-            //contentStr字符串为发送的消息字符串，contentBytes为发送消息的bute[]数据，按照发送消息的内容类型，2个参数仅有一个不为null
             TcpClientSendMessageEvent event = (TcpClientSendMessageEvent) et;
             Log.w(TAG, String.format("客户端发送消息，服务端口：%d, 服务端地址：%s，发送消息内容：%s", event.getServicePort(), event.getAddress(), event.getContent().toString();
         }
