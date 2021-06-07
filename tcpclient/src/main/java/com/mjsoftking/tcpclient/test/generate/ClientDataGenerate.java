@@ -14,8 +14,8 @@ public class ClientDataGenerate implements TcpBaseDataGenerate {
 
 
     @Override
-    public byte[] generate(String content) {
-        return content.getBytes(Charset.forName("UTF-8"));
+    public byte[] generate(Object content) {
+        return content.toString().getBytes(Charset.forName("UTF-8"));
     }
 
     @Override
