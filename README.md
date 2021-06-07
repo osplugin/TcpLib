@@ -269,3 +269,236 @@ boolean boolean isConnect(String ipAddress, int port) {}
 关闭与指定服务器的连接
 void close(String ipAddress, int port)
 ```
+#### 七、比较复杂的报文解析处理
+ **- 报文处理类** 
+
+```
+/**
+ * 用途：报文结构类
+ * <p>
+ * 完整报文包含：
+ * 4位报文头长
+ * 4位指令长
+ * 4位数据长度
+ * 不定位数据长度
+ * 1位签名长度
+ * 4位报文尾长
+ */
+public class Datagram {
+
+    /**
+     * 报文头，0xDD,0xDD,0xDD,0xDD
+     */
+    public final static byte[] HEADER = new byte[]{(byte) 0xDD, (byte) 0xDD, (byte) 0xDD, (byte) 0xDD};
+    /**
+     * 报文尾，0xFF,0xFF,0xFF,0xFF
+     */
+    public final static byte[] FOOTER = new byte[]{(byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF};
+    /**
+     * 命令，预留4位
+     */
+    private byte[] command;
+    /**
+     * 数据长度，预留4位
+     */
+    private byte[] length;
+    /**
+     * 数据
+     */
+    private byte[] data;
+    /**
+     * 签名 1位，数据部分的和 &0xFF 的值
+     */
+    private byte sign;
+
+    /**
+     * 不建议使用，供序列化用
+     */
+    @Deprecated
+    public Datagram() {
+    }
+
+    /**
+     * 生成发送的数据
+     *
+     * @param command 4位长度命令
+     * @param data    有效数据
+     */
+    public Datagram(byte[] command, byte[] data) {
+        this.command = command;
+        this.length = dataLengthBytes(data.length);
+        this.data = data;
+        sign();
+    }
+
+    /**
+     * 将收取到的完整报文解析回原始数据
+     *
+     * @param fullData 完整一帧数据
+     */
+    public Datagram(byte[] fullData) {
+        this.command = new byte[]{fullData[4], fullData[5], fullData[6], fullData[7]};
+        this.length = new byte[]{fullData[8], fullData[9], fullData[10], fullData[11]};
+        int dataLength = dataLength();
+        this.data = new byte[dataLength];
+        System.arraycopy(fullData, 12, this.data, 0, dataLength);
+        this.sign = fullData[12 + dataLength];
+    }
+
+    /**
+     * 获取数据有效长度
+     */
+    public static int dataLength(byte[] lengthBytes) {
+        //取得数据长度
+        return new BigInteger(lengthBytes).intValue();
+    }
+
+    public byte[] getCommand() {
+        return command;
+    }
+
+    public byte[] getLength() {
+        return length;
+    }
+
+    public byte[] getData() {
+        return data;
+    }
+
+    public byte getSign() {
+        return sign;
+    }
+
+    /**
+     * 4位表示的data长度
+     *
+     * @param len
+     * @return
+     */
+    public byte[] dataLengthBytes(int len) {
+        byte[] buffer = new byte[4];
+        buffer[0] = (byte) (len >>> 24);
+        buffer[1] = (byte) (len >>> 16);
+        buffer[2] = (byte) (len >>> 8);
+        buffer[3] = (byte) (len);
+        return buffer;
+    }
+
+    /**
+     * 获取数据有效长度
+     */
+    public int dataLength() {
+        //取得数据长度
+        return dataLength(length);
+    }
+
+    /**
+     * 签名
+     */
+    private void sign() {
+        long mSum = 0;
+        for (int i = 0; i < data.length; ++i) {
+            mSum += (long) data[i];
+        }
+        sign = (byte) (mSum & 0xff);
+    }
+
+    /**
+     * 求和签名验证
+     */
+    public boolean checkSign() {
+        long mSum = 0;
+        for (int i = 0; i < data.length; ++i) {
+            mSum += (long) data[i];
+        }
+        return sign == (byte) (mSum & 0xff);
+    }
+
+    /**
+     * 取得完整数据报文
+     * <p>
+     * 4位报文头长
+     * 4位指令长
+     * 4位数据长度
+     * 不定位数据长度
+     * 1位签名长度
+     * 4位报文尾长
+     */
+    public byte[] fullData() {
+        byte[] buffer = new byte[4 + 4 + 4 + dataLength() + 1 + 4];
+        System.arraycopy(HEADER, 0, buffer, 0, HEADER.length);
+        System.arraycopy(command, 0, buffer, 4, command.length);
+        System.arraycopy(length, 0, buffer, 8, length.length);
+        System.arraycopy(data, 0, buffer, 12, data.length);
+        buffer[12 + data.length] = sign;
+        System.arraycopy(FOOTER, 0, buffer, 12 + data.length + 1, FOOTER.length);
+        return buffer;
+    }
+}
+
+```
+ **- 报文解析类的处理方案** 
+
+```
+public class TcpServiceDispose implements TcpBaseDataDispose {
+
+    TcpServiceDispose() {
+    }
+
+    public static synchronized TcpServiceDispose creteObject() {
+        return new TcpServiceDispose();
+    }
+
+    @Override
+    public void dispose(ByteQueueList bufferQueue, int servicePort, String address) {
+        //缓冲区数据长度必须满足无数据大小的整包长度，方可计算
+        if (bufferQueue.size() < (4 + 4 + 4 + 1 + 4)) {
+            return;
+        }
+        //验证报文头是否匹配
+        if (!Arrays.equals(Datagram.HEADER, bufferQueue.copy(4))) {
+            //不匹配时移除首位byte
+            bufferQueue.removeFirstFrame();
+            return;
+        }
+        //读取数据的长度
+        int dataLength = Datagram.dataLength(new byte[]{
+                bufferQueue.get(8),
+                bufferQueue.get(9),
+                bufferQueue.get(10),
+                bufferQueue.get(11)});
+        //报文的完整长度
+        int length = 4 + 4 + 4 + dataLength + 1 + 4;
+        //取出报文并移除队列
+        byte[] bytes = bufferQueue.copyAndRemove(length);
+        //验证报文尾
+        if (!Arrays.equals(Datagram.FOOTER, new byte[]{
+                bufferQueue.get(4 + 4 + 4 + dataLength + 1),
+                bufferQueue.get(4 + 4 + 4 + dataLength + 1 + 1),
+                bufferQueue.get(4 + 4 + 4 + dataLength + 1 + 2),
+                bufferQueue.get(4 + 4 + 4 + dataLength + 1 + 3)
+        })) {
+            //todo 报文无效
+            return;
+        }
+
+        Datagram datagram = new Datagram(bytes);
+        if (!datagram.checkSign()) {
+            //签名校验失败
+            return;
+        }
+        //todo 根据命令做事件分发，以及针对命令对数据做处理
+
+        //命令 byte[4]
+        datagram.getCommand();
+        //实际数据 byte[n]
+        datagram.getData();
+
+        。。。
+    }
+}
+```
+
+
+
+
