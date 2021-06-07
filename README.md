@@ -50,7 +50,7 @@ public class DataDispose implements TcpBaseDataDispose {
 ```
  **- 发送报文处理** 
 
-简单示例，也可以定义带报文头、报文尾、数据验证等的处理方式，具体规则完全由自己定义。
+ **此为简单示例** ，也可以定义带报文头、报文尾、数据验证等的处理方式，具体规则完全由自己定义。
 必须实现接口 **TcpBaseDataGenerate** 
 
 ```
