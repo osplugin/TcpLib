@@ -15,11 +15,13 @@ public class ClientDataGenerate implements TcpBaseDataGenerate {
 
     @Override
     public byte[] generate(Object content) {
-        return content.toString().getBytes(Charset.forName("UTF-8"));
+        if (content instanceof byte[]) {
+            return (byte[]) content;
+        } else if (content instanceof String) {
+            return ((String) content).getBytes(Charset.forName("UTF-8"));
+        } else {
+            return content.toString().getBytes(Charset.forName("UTF-8"));
+        }
     }
 
-    @Override
-    public byte[] generate(byte[] contentBytes) {
-        return contentBytes;
-    }
 }
