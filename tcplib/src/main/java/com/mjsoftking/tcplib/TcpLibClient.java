@@ -2,8 +2,6 @@ package com.mjsoftking.tcplib;
 
 import android.util.Log;
 
-import androidx.annotation.NonNull;
-
 import com.mjsoftking.tcplib.dispose.TcpDataBuilder;
 import com.mjsoftking.tcplib.event.client.TcpClientSendMessageEvent;
 import com.mjsoftking.tcplib.event.client.TcpServiceConnectFailEvent;
@@ -52,7 +50,7 @@ public class TcpLibClient {
      * @param port      端口号
      * @param builder   使用builder生成对发送数据生成和接收数据解析的实现
      */
-    public synchronized void connect(String ipAddress, int port, @NonNull TcpDataBuilder builder) {
+    public synchronized void connect(String ipAddress, int port, TcpDataBuilder builder) {
         connect(String.format(Locale.getDefault(), IP_ADDRESS, ipAddress, port), builder);
     }
 
@@ -62,7 +60,7 @@ public class TcpLibClient {
      * @param address ip:port
      * @param builder 使用builder生成对发送数据生成和接收数据解析的实现
      */
-    public synchronized void connect(String address, @NonNull TcpDataBuilder builder) {
+    public synchronized void connect(String address, TcpDataBuilder builder) {
         String[] ads = address.split(":");
         String ipAddress = ads[0];
         int port = Integer.parseInt(ads[1]);

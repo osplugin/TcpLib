@@ -2,8 +2,6 @@ package com.mjsoftking.tcplib.list;
 
 import android.util.Log;
 
-import androidx.annotation.NonNull;
-
 import com.mjsoftking.tcplib.TcpLibConfig;
 
 import java.util.ArrayList;
@@ -32,7 +30,7 @@ public class ByteQueueList extends CopyOnWriteArrayList<Byte> {
      *
      * @param c byte[]
      */
-    public boolean addAll(@NonNull byte[] c) {
+    public boolean addAll(byte[] c) {
         List<Byte> list = new ArrayList<>();
         for (byte b : c) {
             list.add(b);

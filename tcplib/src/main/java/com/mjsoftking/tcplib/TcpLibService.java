@@ -2,8 +2,6 @@ package com.mjsoftking.tcplib;
 
 import android.util.Log;
 
-import androidx.annotation.NonNull;
-
 import com.mjsoftking.tcplib.dispose.TcpDataBuilder;
 import com.mjsoftking.tcplib.event.service.TcpServiceBindFailEvent;
 import com.mjsoftking.tcplib.event.service.TcpServiceBindSuccessEvent;
@@ -53,11 +51,11 @@ public class TcpLibService {
         return TCP_SERVICE;
     }
 
-    public synchronized void bindService(int port, @NonNull TcpDataBuilder builder) {
+    public synchronized void bindService(int port, TcpDataBuilder builder) {
         bindService(port, 255, builder);
     }
 
-    public synchronized void bindService(int port, int backlog, @NonNull TcpDataBuilder builder) {
+    public synchronized void bindService(int port, int backlog, TcpDataBuilder builder) {
         if (null != serverSocketMap.get(port)) {
             if (TcpLibConfig.getInstance().isDebugMode()) {
                 Log.w(TAG, "TCP服务在端口: " + port + "下已经启动，请勿多次启动");
