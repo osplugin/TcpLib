@@ -89,6 +89,9 @@ public class TcpDataReceiveThread extends Thread {
                     }
                 }
                 //客户端已经断开
+                //清空对应缓存区
+                bufferQueue.clear();
+                //移除缓存队列
                 clientMap.remove(address);
                 if (isClient) {
                     // 发送与服务器断开事件
