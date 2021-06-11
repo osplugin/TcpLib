@@ -80,7 +80,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onDestroy();
         EventBus.getDefault().unregister(this);
         TcpLibClient.getInstance()
-                .close(binding.getEtIp(), Integer.parseInt(binding.getEtPort()));
+                .close();
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -138,7 +138,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 return;
             }
             TcpLibClient.getInstance()
-                    .close(binding.getEtIp(), Integer.parseInt(binding.getEtPort()));
+                    .close();
         }
         //
         else if (v.equals(binding.send)) {
@@ -157,7 +157,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 printf("与服务器连接已断开", true);
                 return;
             }
-            TcpLibClient.getInstance().sendMessage(binding.getEtIp(), Integer.parseInt(binding.getEtPort()), binding.getEtContent());
+            TcpLibClient.getInstance().sendMessage(binding.getEtContent());
         }
     }
 
