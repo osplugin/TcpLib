@@ -51,7 +51,7 @@ public class TcpLibService {
         return TCP_SERVICE;
     }
 
-    public synchronized void bindService(int port, TcpDataBuilder builder) {
+    public void bindService(int port, TcpDataBuilder builder) {
         bindService(port, 255, builder);
     }
 
@@ -116,6 +116,23 @@ public class TcpLibService {
     }
 
     /**
+     * 关闭端口服务监听
+     * <p>
+     * 如果运行了多个服务器时，则操作端口号最小的服务器
+     */
+    public synchronized void close() {
+        Integer port = onlyRunServicePort();
+        if (null == port) {
+            if (TcpLibConfig.getInstance().isDebugMode()) {
+                Log.w(TAG, "当前没有正在运行的服务器");
+            }
+            return;
+        }
+
+        close(port);
+    }
+
+    /**
      * 关闭所有端口服务监听
      */
     public synchronized void closeAll() {
@@ -140,7 +157,7 @@ public class TcpLibService {
     /**
      * 指定端口服务器的关闭指定客户端
      */
-    public void closeClient(int port, String address) {
+    public synchronized void closeClient(int port, String address) {
         if (!isRun(port)) {
             if (TcpLibConfig.getInstance().isDebugMode()) {
                 Log.w(TAG, "服务端端口: " + port + ", 服务端未启动");
@@ -169,6 +186,23 @@ public class TcpLibService {
     }
 
     /**
+     * 指定端口服务器的关闭指定客户端
+     * <p>
+     * 如果运行了多个服务器时，则操作端口号最小的服务器
+     */
+    public synchronized void closeClient(String address) {
+        Integer port = onlyRunServicePort();
+        if (null == port) {
+            if (TcpLibConfig.getInstance().isDebugMode()) {
+                Log.w(TAG, "当前没有正在运行的服务器");
+            }
+            return;
+        }
+
+        closeClient(port, address);
+    }
+
+    /**
      * 获取指定端口服务器的在线客户端数量
      *
      * @param port 指定端口服务器
@@ -183,6 +217,25 @@ public class TcpLibService {
             return 0;
         }
         return map.size();
+    }
+
+    /**
+     * 获取指定端口服务器的在线客户端数量
+     * <p>
+     * 如果运行了多个服务器时，则操作端口号最小的服务器
+     *
+     * @return 在线客户端数；-1:服务器未启动，反之为在线数量
+     */
+    public int getOnlineClientCount() {
+        Integer port = onlyRunServicePort();
+        if (null == port) {
+            if (TcpLibConfig.getInstance().isDebugMode()) {
+                Log.w(TAG, "当前没有正在运行的服务器");
+            }
+            return -1;
+        }
+
+        return getOnlineClientCount(port);
     }
 
     /**
@@ -203,6 +256,25 @@ public class TcpLibService {
         addressList.addAll(map.keySet());
         Collections.sort(addressList, String::compareTo);
         return addressList;
+    }
+
+    /**
+     * 获取指定端口服务器的在线客户端
+     * <p>
+     * 如果运行了多个服务器时，则操作端口号最小的服务器
+     *
+     * @return 在线客户端；null:服务器未启动，反之为在线客户端的ip:port形式列表，此内容可以直接在服务器向其发送数据
+     */
+    public List<String> getOnlineClient() {
+        Integer port = onlyRunServicePort();
+        if (null == port) {
+            if (TcpLibConfig.getInstance().isDebugMode()) {
+                Log.w(TAG, "当前没有正在运行的服务器");
+            }
+            return null;
+        }
+
+        return getOnlineClient(port);
     }
 
     /**
@@ -251,6 +323,26 @@ public class TcpLibService {
     }
 
     /**
+     * 向指定的客户端按照指定数据格式发送数据
+     * <p>
+     * 如果运行了多个服务器时，则操作端口号最小的服务器
+     *
+     * @param address 在线客户端地址带端口号
+     * @param content 需要发送的原始数据
+     */
+    public void sendMessage(String address, Object content) {
+        Integer port = onlyRunServicePort();
+        if (null == port) {
+            if (TcpLibConfig.getInstance().isDebugMode()) {
+                Log.w(TAG, "当前没有正在运行的服务器");
+            }
+            return;
+        }
+
+        sendMessage(port, address, content);
+    }
+
+    /**
      * 通过指定服务器向与此服务器连接的所有客户端按照指定数据格式发送数据
      *
      * @param port    指定服务器端口号，使用此端口启动的服务发起数据发送
@@ -275,5 +367,32 @@ public class TcpLibService {
         }
     }
 
+    /**
+     * 通过指定服务器向与此服务器连接的所有客户端按照指定数据格式发送数据
+     * <p>
+     * 如果运行了多个服务器时，则操作端口号最小的服务器
+     *
+     * @param content 需要发送的原始数据
+     */
+    public void sendAllClientMessage(Object content) {
+        Integer port = onlyRunServicePort();
+        if (null == port) {
+            if (TcpLibConfig.getInstance().isDebugMode()) {
+                Log.w(TAG, "当前没有正在运行的服务器");
+            }
+            return;
+        }
+
+        sendAllClientMessage(port, content);
+    }
+
+    /**
+     * 如果运行的服务器数量大于0，则返回端口号正序排列后的第一个，反之返回null
+     */
+    private Integer onlyRunServicePort() {
+        List<Integer> s = new ArrayList<>(serverSocketMap.keySet());
+        Collections.sort(s);
+        return s.size() > 0 ? s.get(0) : null;
+    }
 
 }
