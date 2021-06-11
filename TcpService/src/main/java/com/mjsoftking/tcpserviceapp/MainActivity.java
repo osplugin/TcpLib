@@ -73,7 +73,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 Client client = adapter.getItem(position);
                 DialogLibCommon.create(MainActivity.this)
                         .setOnBtnOk(() -> TcpLibService.getInstance()
-                                .closeClient(Integer.parseInt(binding.getEtPort()), client.getAddress()))
+                                .closeClient(client.getAddress()))
                         .setMessage(String.format(Locale.getDefault(), "确定断开客户端'%s'连接吗", client.getAddress()))
                         .show();
                 return true;
@@ -108,7 +108,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onDestroy() {
         super.onDestroy();
         EventBus.getDefault().unregister(this);
-        TcpLibService.getInstance().close(Integer.parseInt(binding.getEtPort()));
+        TcpLibService.getInstance().closeAll();
     }
 
     @Override
@@ -129,7 +129,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         //
         else if (v.equals(binding.close)) {
             //关闭服务
-            TcpLibService.getInstance().close(Integer.parseInt(binding.getEtPort()));
+            TcpLibService.getInstance().close();
         }
         //
         else if (v.equals(binding.send)) {
@@ -143,7 +143,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
 
             TcpLibService.getInstance()
-                    .sendMessage(Integer.parseInt(binding.getEtPort()), adapter.getCurrentClient(), binding.getEtContent());
+                    .sendMessage(adapter.getCurrentClient(), binding.getEtContent());
 //            printf("发送消息: " + binding.getEtContent(), false);
 //            TcpLibClient.getInstance().close("192.168.1.245:8088");
         }
@@ -192,7 +192,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void refreshClient() {
-        List<String> clients = TcpLibService.getInstance().getOnlineClient(Integer.parseInt(binding.getEtPort()));
+        List<String> clients = TcpLibService.getInstance().getOnlineClient();
         if (CollectionUtils.isEmpty(clients)) {
             adapter.clearAndRefresh();
         }else {
