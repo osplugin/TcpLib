@@ -88,6 +88,11 @@ public class TcpDataReceiveThread extends Thread {
                         Log.e(TAG, e.getMessage(), e);
                     }
                 }
+                //主动关闭一次
+                try {
+                    client.close();
+                } catch (IOException ignore) {
+                }
                 //客户端已经断开
                 //清空对应缓存区
                 bufferQueue.clear();

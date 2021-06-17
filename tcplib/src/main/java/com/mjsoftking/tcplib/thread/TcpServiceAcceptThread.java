@@ -64,6 +64,11 @@ public class TcpServiceAcceptThread extends Thread {
                         Log.e(TAG, e.getMessage(), e);
                     }
                 }
+                //主动调用一次，确保关闭
+                try {
+                    serverSocket.close();
+                } catch (IOException ignore) {
+                }
                 //发送服务器监听关闭事件
                 EventBus.getDefault().post(new TcpServiceCloseEvent(this.servicePort,
                         String.format(Locale.getDefault(), IP_ADDRESS, "0.0.0.0", servicePort)));
