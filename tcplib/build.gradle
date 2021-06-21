@@ -1,6 +1,9 @@
 plugins {
     id 'com.android.library'
+    id 'com.github.dcendents.android-maven'
 }
+
+group='com.gitee.mjsoftking.tcplib'
 
 android {
     compileSdkVersion 30
