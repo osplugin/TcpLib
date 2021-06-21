@@ -5,20 +5,31 @@
 
 #### 一、项目介绍
 1. APP 使用示例项目，libs下含有已编译最新的aar资源。
-2.  **TcpLib**  aar资源项目，需要引入的资源包项目，aar资源已申请联网权限。
+2.  **TcpLib**  aar资源项目，需要引入的资源包项目，aar资源已申请联网权限。 **现已支持jitpack引入。** 
 3.  **TcpService**  为APP类型，服务端演示程序。
 4.  **tcpclient**  为APP类型，客户端演示程序。 
 
 #### 二、工程引入工具包
-下载项目，可以在tcplib项目的libs文件下找到*.aar文件（已编译为最新版），选择其中一个引入自己的工程
+ **工程的build.gradle文件添加** 
 
 ```
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+
+        //jitpack 仓库
+        maven { url 'https://jitpack.io' }
+    }
+}
+```
+
+**APP的build.gradle文件添加** 
+```
 dependencies {
-   //引入tcplib.aar资源
-   implementation fileTree(dir: 'libs', include: ['tcplib.aar'])
-   //eventbus，引入后你的项目将支持EventBus，EventBus是一种用于Android的事件发布-订阅总线，替代广播的传值方式，使用方法可以度娘查询。
-   implementation 'org.greenrobot:eventbus:3.2.0'
-   ...
+    ...
+    implementation 'com.gitee.mjsoftking:TcpLib:1.0.1'
+    implementation 'org.greenrobot:eventbus:3.2.0'
 }
 ```
 #### 三、配置debug模式
