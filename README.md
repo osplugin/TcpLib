@@ -1,8 +1,9 @@
 # TcpLibApp
+[![](https://jitpack.io/v/com.gitee.mjsoftking/TcpLib.svg)](https://jitpack.io/#com.gitee.mjsoftking/TcpLib)
 
 #### 介绍
 安卓 Java tcp提炼封装工具, 目前已支持一台手机建立多个端口监听服务器且使用各自的报文处理规则，一个手机对多个端口服务器进行连接且使用各自的报文处理规则。
-[![](https://jitpack.io/v/com.gitee.mjsoftking/TcpLib.svg)](https://jitpack.io/#com.gitee.mjsoftking/TcpLib)
+
 
 #### 一、项目介绍
 1. APP 使用示例项目，libs下含有已编译最新的aar资源。
