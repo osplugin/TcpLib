@@ -58,7 +58,7 @@ public class ByteQueueList extends CopyOnWriteArrayList<Byte> {
      * @param count 长度，大于0
      */
     public void removeCountFrame(int count) {
-        int c = Math.max(size(), count);
+        int c = Math.min(size(), count);
         while (c-- > 0) {
             removeFirstFrame();
         }
