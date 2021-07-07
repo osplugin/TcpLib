@@ -59,9 +59,7 @@ public class ByteQueueList extends CopyOnWriteArrayList<Byte> {
      */
     public void removeCountFrame(int count) {
         int c = Math.min(size(), count);
-        while (c-- > 0) {
-            removeFirstFrame();
-        }
+        subList(0, c).clear();
     }
 
     /**
