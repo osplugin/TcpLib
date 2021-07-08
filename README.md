@@ -32,7 +32,7 @@ allprojects {
 ```
 dependencies {
     ...
-    implementation 'com.gitee.mjsoftking:TcpLib:1.0.1'
+    implementation 'com.gitee.mjsoftking:TcpLib:1.0.3'
     implementation 'org.greenrobot:eventbus:3.2.0'
 }
 ```
