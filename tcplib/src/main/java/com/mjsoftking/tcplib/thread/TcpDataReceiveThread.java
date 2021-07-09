@@ -79,8 +79,9 @@ public class TcpDataReceiveThread extends Thread {
                     dataDisposeThread.start();
                 }
             } catch (Exception e) {
-                if ("Socket closed".equals(e.getMessage()) ||
-                        "Socket is closed".equals(e.getMessage())) {
+                if ("Socket closed".equalsIgnoreCase(e.getMessage()) ||
+                        "Socket is closed".equalsIgnoreCase(e.getMessage()) ||
+                        "Connection reset".equalsIgnoreCase(e.getMessage())) {
                     if (TcpLibConfig.getInstance().isDebugMode()) {
                         Log.w(TAG, "连接中断," + (isClient ? "服务器地址：" : "客户端地址：") + address);
                     }
