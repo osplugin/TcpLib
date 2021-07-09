@@ -100,10 +100,7 @@ public class ByteQueueList extends CopyOnWriteArrayList<Byte> {
         if (count <= 0) return null;
         if (count > size()) return null;
 
-        byte[] buffer = new byte[count];
-        for (int i = 0; i < count; ++i) {
-            buffer[i] = get(i);
-        }
+        byte[] buffer = copy(count);
 
         removeCountFrame(count);
 
