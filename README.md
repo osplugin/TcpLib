@@ -32,7 +32,7 @@ allprojects {
 ```
 dependencies {
     ...
-    implementation 'com.gitee.mjsoftking:TcpLib:1.0.3'
+    implementation 'com.gitee.mjsoftking:TcpLib:1.0.4'
     implementation 'org.greenrobot:eventbus:3.2.0'
 }
 ```
@@ -40,9 +40,11 @@ dependencies {
 在application下注册debug模式，可以打印更多log日志。
 
 ```
- //配置debug模式
- TcpLibConfig.getInstance()
-           .setDebugMode(BuildConfig.DEBUG);
+//TCP服务设定debug模式，在debug下打印log日志
+TcpLibConfig.getInstance()
+        .setDebugMode(BuildConfig.DEBUG)
+        //设置连接断开后缓存区数据继续保留的时间，单位：分钟，超出此时间后缓存数据扔未处理完时将会被自动清理。
+        .setRetentionTime(30);
 ```
 #### 四、重写服务报文接收及发送处理
  **- 接收报文处理** 

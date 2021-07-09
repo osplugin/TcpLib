@@ -19,23 +19,27 @@ public class ByteQueueList extends CopyOnWriteArrayList<Byte> {
     private final static String TAG = ByteQueueList.class.getSimpleName();
 
     /**
-     * 添加一个byte数据到队列末尾
-     */
-    public boolean add(byte aByte) {
-        return super.add(aByte);
-    }
-
-    /**
      * 将byte[]按照数组顺序逐个添加到队列末尾
      *
      * @param c byte[]
      */
-    public boolean addAll(byte[] c) {
-        List<Byte> list = new ArrayList<>();
-        for (byte b : c) {
-            list.add(b);
+    public boolean add(byte... c) {
+        //数组为null或者大小为0时，直接返回false
+        if (null == c || c.length == 0) {
+            return false;
         }
-        return super.addAll(list);
+        //大小为1时，调用super.add方法
+        else if (c.length == 1) {
+            return super.add(c[0]);
+        }
+        //不定大小时，转为List<Byte>后调用super.addAll方法
+        else {
+            List<Byte> list = new ArrayList<>();
+            for (byte b : c) {
+                list.add(b);
+            }
+            return super.addAll(list);
+        }
     }
 
     /**

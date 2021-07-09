@@ -71,7 +71,7 @@ public class TcpDataReceiveThread extends Thread {
                 }
                 byte[] dataBuffer = new byte[bufferLength];
                 System.arraycopy(buffer, 0, dataBuffer, 0, bufferLength);
-                bufferQueue.addAll(dataBuffer);
+                bufferQueue.add(dataBuffer);
 
                 if (null == dataDisposeThread || !dataDisposeThread.isAlive()) {
                     dataDisposeThread = null;
@@ -82,7 +82,7 @@ public class TcpDataReceiveThread extends Thread {
                 if ("Socket closed".equals(e.getMessage()) ||
                         "Socket is closed".equals(e.getMessage())) {
                     if (TcpLibConfig.getInstance().isDebugMode()) {
-                        Log.w(TAG, "连接中断," + (isClient ? "服务器地址：" : "客户端器地址：") + address);
+                        Log.w(TAG, "连接中断," + (isClient ? "服务器地址：" : "客户端地址：") + address);
                     }
                 } else {
                     if (TcpLibConfig.getInstance().isDebugMode()) {
@@ -94,9 +94,9 @@ public class TcpDataReceiveThread extends Thread {
                     client.close();
                 } catch (IOException ignore) {
                 }
-                //客户端已经断开
-                //清空对应缓存区
-                bufferQueue.clear();
+                //已经断开连接
+                //清空对应缓存区，延时清理，给处理器一点处理时间
+                delayClear();
                 //移除缓存队列
                 clientMap.remove(address);
                 if (isClient) {
@@ -109,7 +109,30 @@ public class TcpDataReceiveThread extends Thread {
                 return;
             }
         }
+    }
 
+    private void delayClear() {
+        new Thread(() -> {
+            int time = 0;
+            while (time < TcpLibConfig.getInstance().getRetentionTime() * 60 * 10) {
+                try {
+                    Thread.sleep(100L);
+                } catch (InterruptedException ignore) {
+                }
+                //如果在延时等待期间处理完缓存区数据，则立即结束
+                if (bufferQueue.size() <= 0) {
+                    return;
+                }
+                ++time;
+            }
 
+            //超出延时等待处理时间时，立即清理缓存区数据，避免处理线程一直处于工作状态，增加机器耗电
+            if (bufferQueue.size() > 0) {
+                bufferQueue.clear();
+                if (TcpLibConfig.getInstance().isDebugMode()) {
+                    Log.w(TAG, (isClient ? "服务器地址：" : "客户端地址：") + address + "断开后, 达到设置的缓存清理时间，自动清理缓存区");
+                }
+            }
+        }).start();
     }
 }
