@@ -1,7 +1,7 @@
 # TcpLibApp
 [![License](https://img.shields.io/badge/License%20-Apache%202-337ab7.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 [![API](https://img.shields.io/badge/API-16%2B-brightgreen.svg?style=flat)](https://android-arsenal.com/api?level=16)
-[![](https://jitpack.io/v/com.gitee.mjsoftking/TcpLib.svg)](https://jitpack.io/#com.gitee.mjsoftking/TcpLib)
+[![](https://jitpack.io/v/com.gitee.osard/TcpLib.svg)](https://jitpack.io/#com.gitee.osard/TcpLib)
 
 #### 介绍
 安卓 Java tcp提炼封装工具, 目前已支持一台手机建立多个端口监听服务器且使用各自的报文处理规则，一个手机对多个端口服务器进行连接且使用各自的报文处理规则。
@@ -32,7 +32,7 @@ allprojects {
 ```
 dependencies {
     ...
-    implementation 'com.gitee.mjsoftking:TcpLib:1.0.4'
+    implementation 'com.gitee.osard:TcpLib:1.0.4'
     implementation 'org.greenrobot:eventbus:3.2.0'
 }
 ```
