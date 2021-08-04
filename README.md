@@ -273,7 +273,7 @@ String address = "127.0.0.1"; //服务端IP地址。
 Object content = "数据";//此参数会进入TcpBaseDataGenerate 实现内，根据具体业务定义数据类型
 TcpLibClient.getInstance().sendMessage(address, port, content);
 ```
- **3. 服务端其他api** 
+ **3. 客户端其他api** 
 
 TcpLibClient提供以下api
 ```
