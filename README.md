@@ -14,7 +14,7 @@
 4.  **tcpclient**  为APP类型，客户端演示程序。 
 
 #### 二、工程引入工具包
- **工程的build.gradle文件添加** 
+ **com.android.tools.build:gradle:4.2.2及以下版本，在工程的 build.gradle 文件添加** 
 
 ```
 allprojects {
@@ -24,6 +24,23 @@ allprojects {
 
         //jitpack 仓库
         maven { url 'https://jitpack.io' }
+    }
+}
+```
+
+**com.android.tools.build:gradle:7.0.0及以上版本，在工程的 settings.gradle 文件添加**
+
+```
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        google()
+        mavenCentral()
+
+        //jitpack 仓库
+        maven {
+            url 'https://jitpack.io'
+        }
     }
 }
 ```
