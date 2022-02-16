@@ -30,6 +30,22 @@ allprojects {
     }
 }
 ```
+**com.android.tools.build:gradle:7.0.0及以上版本，在工程的 settings.gradle 文件添加**
+
+```
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        google()
+        mavenCentral()
+
+        //jitpack 仓库
+        maven {
+            url 'https://jitpack.io'
+        }
+    }
+}
+```
 
 **APP的build.gradle文件添加** 
 ```
