@@ -29,6 +29,7 @@ import com.mjsoftking.tcpserviceapp.adapter.ClientAdapter;
 import com.mjsoftking.tcpserviceapp.bean.Client;
 import com.mjsoftking.tcpserviceapp.databinding.ActivityMainBinding;
 import com.mjsoftking.tcpserviceapp.databinding.LayoutTextBinding;
+import com.mjsoftking.tcpserviceapp.test.Datagram;
 import com.mjsoftking.tcpserviceapp.test.dispose.ServiceDataDispose;
 import com.mjsoftking.tcpserviceapp.test.event.TcpServiceReceiveDataEvent;
 import com.mjsoftking.tcpserviceapp.test.generate.ServiceDataGenerate;
@@ -37,6 +38,7 @@ import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
+import java.nio.charset.Charset;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
@@ -59,6 +61,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         binding.setIsConnect(false);
         binding.setSelect(false);
         binding.setEtPort("50000");
+
+        binding.tipLayout.setOnLongClickListener(v -> {
+            binding.tipLayout.removeAllViews();
+            return true;
+        });
 
         adapter = new ClientAdapter(this);
         binding.list.setAdapter(adapter);
@@ -87,6 +94,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private long exitTime = 0;
+
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         // 判断按下的是不是返回键
@@ -143,7 +151,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
 
             TcpLibService.getInstance()
-                    .sendMessage(adapter.getCurrentClient(), binding.getEtContent());
+                    .sendMessage(adapter.getCurrentClient(), new Datagram(new byte[]{0x00, 0x01},
+                            binding.getEtContent().getBytes(Charset.forName("UTF-8"))));
 //            printf("发送消息: " + binding.getEtContent(), false);
 //            TcpLibClient.getInstance().close("192.168.1.245:8088");
         }
@@ -186,8 +195,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         //todo 服务端发送消息事件
         else if (et instanceof TcpServiceSendMessageEvent) {
             TcpServiceSendMessageEvent event = (TcpServiceSendMessageEvent) et;
-            printf("从服务端端口: " + et.getServicePort() + ", 向客户端地址: "
-                    + et.getAddress() + ", 发送消息: " + event.getContent().toString(), false);
+            if (event.getContent() instanceof Datagram) {
+                Datagram datagram = (Datagram) event.getContent();
+
+                printf("从服务端端口: " + et.getServicePort() + ", 向客户端地址: "
+                        + et.getAddress() + ", 发送消息: " + new String(datagram.getData()), false);
+            }
         }
     }
 
@@ -195,7 +208,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         List<String> clients = TcpLibService.getInstance().getOnlineClient();
         if (CollectionUtils.isEmpty(clients)) {
             adapter.clearAndRefresh();
-        }else {
+        } else {
             adapter.clear();
             adapter.addAndRefresh(clients);
         }

@@ -1,8 +1,7 @@
 package com.mjsoftking.tcpclient.test.generate;
 
+import com.mjsoftking.tcpclient.test.Datagram;
 import com.mjsoftking.tcplib.dispose.TcpBaseDataGenerate;
-
-import java.nio.charset.Charset;
 
 /**
  * 用途：
@@ -15,13 +14,11 @@ public class ClientDataGenerate implements TcpBaseDataGenerate {
 
     @Override
     public byte[] generate(Object content) {
-        if (content instanceof byte[]) {
-            return (byte[]) content;
-        } else if (content instanceof String) {
-            return ((String) content).getBytes(Charset.forName("UTF-8"));
-        } else {
-            return content.toString().getBytes(Charset.forName("UTF-8"));
+        if (content instanceof Datagram) {
+            Datagram datagram = (Datagram) content;
+            return datagram.fullData();
         }
+        return new byte[]{ 0 };
     }
 
 }

@@ -15,6 +15,7 @@ import androidx.databinding.DataBindingUtil;
 import com.blankj.utilcode.util.RegexUtils;
 import com.mjsoftking.tcpclient.databinding.ActivityMainBinding;
 import com.mjsoftking.tcpclient.databinding.LayoutTextBinding;
+import com.mjsoftking.tcpclient.test.Datagram;
 import com.mjsoftking.tcpclient.test.dispose.ClientDataDispose;
 import com.mjsoftking.tcpclient.test.event.TcpClientReceiveDataEvent;
 import com.mjsoftking.tcpclient.test.generate.ClientDataGenerate;
@@ -31,6 +32,7 @@ import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
+import java.nio.charset.Charset;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
@@ -55,6 +57,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         binding.setEtIp("127.0.0.1");
         binding.setEtPort("50000");
+
+        binding.tipLayout.setOnLongClickListener(v -> {
+            binding.tipLayout.removeAllViews();
+            return true;
+        });
     }
 
     private long exitTime = 0;
@@ -108,8 +115,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         //todo 客户端发送消息事件
         else if (et instanceof TcpClientSendMessageEvent) {
             TcpClientSendMessageEvent event = (TcpClientSendMessageEvent) et;
-            printf("向服务端端口: " + et.getServicePort() + ", 服务端地址: "
-                    + et.getAddress() + ", 发送消息: " + event.getContent().toString(), false);
+            if (event.getContent() instanceof Datagram) {
+                Datagram datagram = (Datagram) event.getContent();
+
+                printf("向服务端端口: " + et.getServicePort() + ", 服务端地址: "
+                        + et.getAddress() + ", 发送消息: " + new String(datagram.getData()), false);
+            }
         }
     }
 
@@ -157,7 +168,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 printf("与服务器连接已断开", true);
                 return;
             }
-            TcpLibClient.getInstance().sendMessage(binding.getEtContent());
+            TcpLibClient.getInstance().sendMessage(new Datagram(new byte[]{0x00,0x01},
+                    binding.getEtContent().getBytes(Charset.forName("UTF-8"))));
         }
     }
 

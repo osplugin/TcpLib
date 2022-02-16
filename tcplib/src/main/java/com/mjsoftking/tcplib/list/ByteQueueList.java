@@ -5,8 +5,8 @@ import android.util.Log;
 import com.mjsoftking.tcplib.TcpLibConfig;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * 用途：线程安全的 byte 列表
@@ -14,9 +14,10 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * 作者：mjSoftKing
  * 时间：2021/02/23
  */
-public class ByteQueueList extends CopyOnWriteArrayList<Byte> {
+public class ByteQueueList extends ArrayList<Byte> {
 
     private final static String TAG = ByteQueueList.class.getSimpleName();
+    final transient Object lock = new Object();
 
     /**
      * 将byte[]按照数组顺序逐个添加到队列末尾
@@ -24,35 +25,84 @@ public class ByteQueueList extends CopyOnWriteArrayList<Byte> {
      * @param c byte[]
      */
     public boolean add(byte... c) {
-        //数组为null或者大小为0时，直接返回false
-        if (null == c || c.length == 0) {
-            return false;
-        }
-        //大小为1时，调用super.add方法
-        else if (c.length == 1) {
-            return super.add(c[0]);
-        }
-        //不定大小时，转为List<Byte>后调用super.addAll方法
-        else {
-            List<Byte> list = new ArrayList<>();
-            for (byte b : c) {
-                list.add(b);
+        synchronized (lock) {
+            //数组为null或者大小为0时，直接返回false
+            if (null == c || c.length == 0) {
+                return false;
             }
-            return super.addAll(list);
+            //大小为1时，调用super.add方法
+            else if (c.length == 1) {
+                return super.add(c[0]);
+            }
+            //不定大小时，转为List<Byte>后调用super.addAll方法
+            else {
+                List<Byte> list = new ArrayList<>();
+                for (byte b : c) {
+                    list.add(b);
+                }
+                return super.addAll(list);
+            }
         }
+    }
+
+    /**
+     * 将byte[]按照数组顺序逐个添加到队列末尾
+     *
+     * @param c byte[]
+     */
+    public boolean add(int index, byte... c) {
+        synchronized (lock) {
+            //数组为null或者大小为0时，直接返回false
+            if (null == c || c.length == 0) {
+                return false;
+            }
+            //大小为1时，调用super.add方法
+            else if (c.length == 1) {
+                super.add(index, c[0]);
+                return true;
+            }
+            //不定大小时，转为List<Byte>后调用super.addAll方法
+            else {
+                List<Byte> list = new ArrayList<>();
+                for (byte b : c) {
+                    list.add(b);
+                }
+                return super.addAll(index, list);
+            }
+        }
+    }
+
+    @Override
+    @Deprecated
+    public boolean add(Byte aByte) {
+        return false;
+    }
+
+    @Override
+    @Deprecated
+    public boolean addAll(int index, Collection<? extends Byte> c) {
+        return false;
+    }
+
+    @Override
+    @Deprecated
+    public boolean addAll(Collection<? extends Byte> c) {
+        return false;
     }
 
     /**
      * 从开始位置移除一个数据
      */
     public Byte removeFirstFrame() {
-        try {
-            return remove(0);
-        } catch (IndexOutOfBoundsException e) {
-            if (TcpLibConfig.getInstance().isDebugMode()) {
-                Log.w(TAG, "队列移除首帧失败，" + e.getMessage());
+        synchronized (lock) {
+            try {
+                return remove(0);
+            } catch (IndexOutOfBoundsException e) {
+                if (TcpLibConfig.getInstance().isDebugMode()) {
+                    Log.w(TAG, "队列移除首帧失败，" + e.getMessage());
+                }
+                return null;
             }
-            return null;
         }
     }
 
@@ -62,8 +112,10 @@ public class ByteQueueList extends CopyOnWriteArrayList<Byte> {
      * @param count 长度，大于0
      */
     public void removeCountFrame(int count) {
-        int c = Math.min(size(), count);
-        subList(0, c).clear();
+        synchronized (lock) {
+            int c = Math.min(size(), count);
+            subList(0, c).clear();
+        }
     }
 
     /**

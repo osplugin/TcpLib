@@ -3,17 +3,20 @@
 [![API](https://img.shields.io/badge/API-16%2B-brightgreen.svg?style=flat)](https://android-arsenal.com/api?level=16)
 [![](https://jitpack.io/v/com.gitee.osard/TcpLib.svg)](https://jitpack.io/#com.gitee.osard/TcpLib)
 
-#### 介绍
+### 介绍
 安卓 Java tcp提炼封装工具, 目前已支持一台手机建立多个端口监听服务器且使用各自的报文处理规则，一个手机对多个端口服务器进行连接且使用各自的报文处理规则。
 
+### 更新
+#### V1.1.1 （2022-02-16）
+- 缓冲区列表对象增加写操作时的线程锁，避免出现集合修改错误。
 
-#### 一、项目介绍
+### 一、项目介绍
 1. APP 使用示例项目，libs下含有已编译最新的aar资源。
 2.  **TcpLib**  aar资源项目，需要引入的资源包项目，aar资源已申请联网权限。 **现已支持jitpack引入。** 
 3.  **TcpService**  为APP类型，服务端演示程序。
 4.  **tcpclient**  为APP类型，客户端演示程序。 
 
-#### 二、工程引入工具包
+### 二、工程引入工具包
  **工程的build.gradle文件添加** 
 
 ```
@@ -32,11 +35,11 @@ allprojects {
 ```
 dependencies {
     ...
-    implementation 'com.gitee.osard:TcpLib:1.1.0'
+    implementation 'com.gitee.osard:TcpLib:1.1.1'
     implementation 'org.greenrobot:eventbus:3.2.0'
 }
 ```
-#### 三、配置debug模式
+### 三、配置debug模式
 在application下注册debug模式，可以打印更多log日志。
 
 ```
@@ -46,7 +49,7 @@ TcpLibConfig.getInstance()
         //设置连接断开后缓存区数据继续保留的时间，单位：分钟，超出此时间后缓存数据扔未处理完时将会被自动清理。
         .setRetentionTime(30);
 ```
-#### 四、重写服务报文接收及发送处理
+### 四、重写服务报文接收及发送处理
  **- 接收报文处理** 
 
  **此为简单示例** ，也可以定义带报文头、报文尾、数据验证等的处理方式，具体规则完全由自己定义。bufferQueue处理一帧报文后需要在队列中移除这一帧报文数据。
@@ -75,6 +78,7 @@ public class DataGenerate implements TcpBaseDataGenerate {
 
     @Override
     public byte[] generate(Object content) {
+        //仅作为参考，不推荐此做法，缓冲区为10kb，请做好报文头和报文尾区分，避免缓冲区读取不完整
         if (content instanceof byte[]) {
             return (byte[]) content;
         } else if (content instanceof String) {
@@ -85,7 +89,7 @@ public class DataGenerate implements TcpBaseDataGenerate {
     }
 }
 ```
-#### 五、服务端的使用
+### 五、服务端的使用
  **- 服务端启动，需提供启动的端口号以及报文的处理和生成实现类** 
 
 ```
@@ -191,7 +195,7 @@ List<String> getOnlineClient(int port){}
 void closeClient(int port, String address) {}
 ```
 
-#### 六、客户端的使用
+### 六、客户端的使用
 
 **- 客户端启动，需提供IP和端口号以及报文的处理和生成实现类** 
 
@@ -284,7 +288,7 @@ boolean boolean isConnect(String ipAddress, int port) {}
 关闭与指定服务器的连接
 void close(String ipAddress, int port)
 ```
-#### 七、比较复杂的报文解析处理
+### 七、比较复杂的报文解析处理
  **- 报文处理类** 
 
 ```
