@@ -17,7 +17,7 @@
 4.  **tcpclient**  为APP类型，客户端演示程序。 
 
 ### 二、工程引入工具包
- **工程的build.gradle文件添加** 
+ **com.android.tools.build:gradle:7.0.0以下版本，工程的build.gradle文件添加** 
 
 ```
 allprojects {
