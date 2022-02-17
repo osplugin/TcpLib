@@ -12,10 +12,10 @@
 - 缓冲区为避免方法函数错用，以将常规方法函数进行删除标记。
 
 ### 一、项目介绍
-1. APP 使用示例项目，libs下含有已编译最新的aar资源。
-2.  **TcpLib**  aar资源项目，需要引入的资源包项目，aar资源已申请联网权限。 **现已支持jitpack引入。** 
-3.  **TcpService**  为APP类型，服务端演示程序。
-4.  **tcpclient**  为APP类型，客户端演示程序。 
+
+1.  **TcpLib**  aar资源项目，需要引入的资源包项目，aar资源已申请联网权限。 **现已支持jitpack引入。** 
+2.  **TcpService**  为APP类型，服务端演示程序。
+3.  **tcpclient**  为APP类型，客户端演示程序。 
 
 ### 二、工程引入工具包
  **com.android.tools.build:gradle:7.0.0以下版本，工程的build.gradle文件添加** 
