@@ -7,6 +7,8 @@
 安卓 Java tcp提炼封装工具, 目前已支持一台手机建立多个端口监听服务器且使用各自的报文处理规则，一个手机对多个端口服务器进行连接且使用各自的报文处理规则。
 
 ### 更新
+#### V1.1.2 （2022-09-08）
+- 缓冲区列表对象修改，避免出现集合修改错误。
 #### V1.1.1 （2022-02-17）
 - 缓冲区列表对象增加写操作时的线程锁，避免出现集合修改错误。
 - 缓冲区为避免方法函数错用，以将常规方法函数进行删除标记。
@@ -52,7 +54,7 @@ dependencyResolutionManagement {
 ```
 dependencies {
     ...
-    implementation 'com.gitee.osard:TcpLib:1.1.1'
+    implementation 'com.gitee.osard:TcpLib:1.1.2'
     implementation 'org.greenrobot:eventbus:3.2.0'
 }
 ```
