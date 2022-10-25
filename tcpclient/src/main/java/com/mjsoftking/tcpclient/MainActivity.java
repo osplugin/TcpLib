@@ -56,7 +56,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         binding.setIsConnect(false);
 
         binding.setEtIp("127.0.0.1");
-        binding.setEtPort("50000");
+        binding.setEtPort("5000");
 
         binding.tipLayout.setOnLongClickListener(v -> {
             binding.tipLayout.removeAllViews();

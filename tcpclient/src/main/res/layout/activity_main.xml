@@ -85,7 +85,7 @@
                 android:background="@drawable/bg_et_enabled_select"
                 android:enabled="@{!isConnect}"
                 android:gravity="center"
-                android:hint="50000"
+                android:hint="5000"
                 android:inputType="number"
                 android:maxLength="5"
                 android:padding="5dp"
