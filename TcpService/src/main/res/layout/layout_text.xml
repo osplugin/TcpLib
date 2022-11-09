@@ -35,7 +35,7 @@
             android:layout_marginTop="2dp"
             android:text="@{message}"
             android:textColor="@{error ? @color/colorAccent : @color/main_color}"
-            android:textIsSelectable="true"
+            android:textIsSelectable="false"
             android:textSize="14sp" />
     </LinearLayout>
 </layout>

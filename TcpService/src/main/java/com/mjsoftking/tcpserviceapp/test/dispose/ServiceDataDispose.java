@@ -131,8 +131,7 @@ public class ServiceDataDispose implements TcpBaseDataDispose {
 //            EventBus.getDefault().post(new TcpServiceReceiveDataEvent(servicePort, clientAddress, new String(datagram.getData())));
 
             byte[] b = bufferQueue.copyAndRemove(bufferQueue.size());
-            EventBus.getDefault().post(new TcpServiceReceiveDataEvent(servicePort, clientAddress, bytesToHexString(b, " ")));
-            bufferQueue.clear();
+            EventBus.getDefault().post(new TcpServiceReceiveDataEvent(servicePort, clientAddress, b.length + "", b.length));
 
         } catch (Exception e) {
             LogUtils.e(TAG, "客户端地址：" + clientAddress + "，缓冲区数据处理发生异常", e);

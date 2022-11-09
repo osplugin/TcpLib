@@ -30,7 +30,6 @@
         android:orientation="vertical">
 
 
-
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -108,10 +107,9 @@
 
             <ListView
                 android:id="@+id/list"
-                android:background="@drawable/bg_button5"
                 android:layout_width="match_parent"
                 android:layout_height="120dp"
-                />
+                android:background="@drawable/bg_button5" />
 
         </LinearLayout>
 
@@ -147,6 +145,35 @@
                 android:padding="5dp"
                 android:text="发送"
                 android:textColor="@color/white"
+                android:textSize="16sp" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_marginTop="5dp"
+            android:layout_marginEnd="10dp"
+            android:orientation="horizontal">
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:gravity="center"
+                android:text="总接收字节数量："
+                android:textColor="@color/dark_green"
+                android:textSize="16sp" />
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/byteCount"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:gravity="center"
+                android:text="0 字节"
+                android:textColor="@color/dark_green"
                 android:textSize="16sp" />
 
         </LinearLayout>

@@ -48,6 +48,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private ActivityMainBinding binding;
     private ClientAdapter adapter;
 
+    private int count = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,6 +63,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         binding.tipLayout.setOnLongClickListener(v -> {
             binding.tipLayout.removeAllViews();
+            count = 0;
+            showByteCount();
             return true;
         });
 
@@ -162,8 +165,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             TcpServiceReceiveDataEvent event = (TcpServiceReceiveDataEvent) et;
 //            printf("服务端端口: " + event.getServicePort() + ", 地址: " + event.getAddress() + ", 接收到数据: " + event.getMessage(),
 //                    false);
-            printf("服务端端口: " + event.getServicePort() + ", 地址: " + event.getAddress() + ", 接收到数据数量: " + event.getMessage().length(),
+            printf("服务端端口: " + event.getServicePort() + ", 地址: " + event.getAddress() + ", 接收到数据数量: " + event.getMessage(),
                     false);
+            count += event.getCount();
+            showByteCount();
         }
         //todo 服务启动成功
         else if (et instanceof TcpServiceBindSuccessEvent) {
@@ -197,6 +202,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             printf("从服务端端口: " + et.getServicePort() + ", 向客户端地址: "
                     + et.getAddress() + ", 发送消息: " + event.getContent().toString(), false);
         }
+    }
+
+    private void showByteCount() {
+        binding.byteCount.setText(String.format(Locale.getDefault(), "%d 字节", count));
     }
 
     private void refreshClient() {

@@ -10,14 +10,20 @@ import com.mjsoftking.tcplib.event.TcpBaseEvent;
  */
 public class TcpServiceReceiveDataEvent extends TcpBaseEvent {
 
-    private String message;
+    private final String message;
+    private final int count;
 
-    public TcpServiceReceiveDataEvent(int servicePort, String ipAddress, String message) {
+    public TcpServiceReceiveDataEvent(int servicePort, String ipAddress, String message, int count) {
         super(servicePort, ipAddress);
         this.message = message;
+        this.count = count;
     }
 
     public String getMessage() {
         return message;
+    }
+
+    public int getCount() {
+        return count;
     }
 }
