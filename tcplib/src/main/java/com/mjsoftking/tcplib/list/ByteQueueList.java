@@ -6,7 +6,6 @@ import android.util.Log;
 import com.mjsoftking.tcplib.TcpLibConfig;
 import com.mjsoftking.tcplib.utils.Bytes;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -45,19 +44,7 @@ public class ByteQueueList extends CopyOnWriteArrayList<Byte> {
         if (null == c || c.length == 0) {
             return false;
         }
-        //大小为1时，调用super.add方法
-        else if (c.length == 1) {
-            super.add(c[0]);
-            return true;
-        }
-        //不定大小时，转为List<Byte>后调用super.addAll方法
-        else {
-            List<Byte> list = new ArrayList<>();
-            for (byte b : c) {
-                list.add(b);
-            }
-            return super.addAll(list);
-        }
+        return super.addAll(Bytes.asList(c));
 //        }
     }
 
