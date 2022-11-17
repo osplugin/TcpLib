@@ -139,7 +139,7 @@ public class ByteQueueList extends CopyOnWriteArrayList<Byte> {
         if (start < 0 || count <= 0) return null;
         if ((start + count) > super.size()) return null;
 
-        List<Byte> buffer = super.subList(start, count);
+        List<Byte> buffer = super.subList(start, start + count);
         return Bytes.toArray(buffer);
     }
 

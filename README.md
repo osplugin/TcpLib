@@ -7,6 +7,8 @@
 安卓 Java tcp提炼封装工具, 目前已支持一台手机建立多个端口监听服务器且使用各自的报文处理规则，一个手机对多个端口服务器进行连接且使用各自的报文处理规则。
 
 ### 更新
+#### V1.1.4 （2022-11-17）
+- 修改截取缓存区bug。
 #### V1.1.3 （2022-11-09）
 - 修改缓存区相关方法，使用提取谷歌高效转换方法，提高缓冲区读取速率。
 #### V1.1.2 （2022-09-08）
@@ -56,7 +58,7 @@ dependencyResolutionManagement {
 ```
 dependencies {
     ...
-    implementation 'com.gitee.osard:TcpLib:1.1.3'
+    implementation 'com.gitee.osard:TcpLib:+'
     implementation 'org.greenrobot:eventbus:3.3.1'
 }
 ```
