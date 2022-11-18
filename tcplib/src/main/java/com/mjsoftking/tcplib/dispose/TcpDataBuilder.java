@@ -2,9 +2,19 @@ package com.mjsoftking.tcplib.dispose;
 
 import android.util.Log;
 
+import com.mjsoftking.tcplib.TcpLibConfig;
+import com.mjsoftking.tcplib.event.client.TcpClientSendMessageEvent;
+import com.mjsoftking.tcplib.event.service.TcpServiceSendMessageEvent;
+
+import org.greenrobot.eventbus.EventBus;
+
+import java.io.IOException;
+import java.io.OutputStream;
 import java.net.Socket;
 import java.nio.charset.Charset;
 import java.util.Arrays;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * 用途：数据处理器
@@ -21,6 +31,8 @@ public class TcpDataBuilder {
     private final TcpBaseDataDispose dataDispose;
     //发送数据报文的生成接口
     private final TcpBaseDataGenerate dataGenerate;
+    //单例线程池
+    private final ExecutorService sendMessageExecutorService;
     /**
      * 客户端隧道
      * <p>
@@ -60,6 +72,8 @@ public class TcpDataBuilder {
 
         this.dataGenerate = dataGenerate;
         this.dataDispose = dataDispose;
+
+        this.sendMessageExecutorService = Executors.newSingleThreadExecutor();
     }
 
     /**
@@ -99,6 +113,41 @@ public class TcpDataBuilder {
      */
     public TcpDataBuilder copy() {
         return new TcpDataBuilder(getDataGenerate(), getDataDispose());
+    }
+
+    public void serviceSendMessage(int port, String address, Object content) {
+        sendMessageExecutorService.submit(() -> {
+            try {
+                sendMessage(content);
+                //发送消息发送成功事件
+                EventBus.getDefault().post(new TcpServiceSendMessageEvent(port, address, content));
+            } catch (IOException e) {
+                if (TcpLibConfig.getInstance().isDebugMode()) {
+                    Log.e(TAG, "服务端端口: " + port + ", " +
+                            "客户端: " + address + ", 向指定客户端发送消息异常", e);
+                }
+            }
+        });
+    }
+
+    public void clientSendMessage(String address, Object content) {
+        sendMessageExecutorService.submit(() -> {
+            try {
+                sendMessage(content);
+                //发送消息发送成功事件
+                EventBus.getDefault().post(new TcpClientSendMessageEvent(address, content));
+            } catch (IOException e) {
+                if (TcpLibConfig.getInstance().isDebugMode()) {
+                    Log.e(TAG, "服务端端口: " + address + ", 向指定服务端发送消息异常", e);
+                }
+            }
+        });
+    }
+
+    private void sendMessage(Object content) throws IOException {
+        OutputStream outputStream = socket.getOutputStream();
+        outputStream.write(dataGenerate.generate(content));
+        outputStream.flush();
     }
 
 
