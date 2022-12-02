@@ -6,6 +6,7 @@ import android.util.Log;
 import com.mjsoftking.tcplib.TcpLibConfig;
 import com.mjsoftking.tcplib.utils.Bytes;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -92,12 +93,48 @@ public class ByteQueueList extends CopyOnWriteArrayList<Byte> {
     }
 
     /**
+     * 从缓存区移除所有与给定报文头不匹配的数据
+     * <p>
+     * 第一个头数据找不到时移除当前缓存区执行方法时记录的缓存区数据；
+     * <p>
+     * 找到第一个头数据匹配时查找对应位置开始是否与头数据完全匹配：
+     * 若匹配则移除第一个头数据匹配时索引前的全部数据；
+     * 反之移除一个字节，等待下次执行方法。
+     */
+    public boolean removeFrameToHeader(byte[] header) {
+        if (null == header || header.length == 0) return false;
+
+        int size = size();
+        int le = header.length;
+
+        int index = indexOf(header[0]);
+        if (index == -1) {
+            removeCountFrame(size);
+            return false;
+        }
+        if (Arrays.equals(header, copy(index, le))) {
+            removeCountFrame(index);
+            return true;
+        } else {
+            if (index == 0) {
+                removeFirstFrame();
+            } else {
+                removeCountFrame(index);
+            }
+            return false;
+        }
+    }
+
+    /**
      * 从开始位置移除一个数据
      */
     public Byte removeFirstFrame() {
         synchronized (lock) {
             try {
-                return super.remove(0);
+                if (size() > 0) {
+                    return super.remove(0);
+                }
+                return null;
             } catch (IndexOutOfBoundsException e) {
                 if (TcpLibConfig.getInstance().isDebugMode()) {
                     Log.w(TAG, "队列移除首帧失败，" + e.getMessage());
@@ -114,8 +151,10 @@ public class ByteQueueList extends CopyOnWriteArrayList<Byte> {
      */
     public void removeCountFrame(int count) {
         synchronized (lock) {
-            int c = Math.min(size(), count);
-            super.subList(0, c).clear();
+            if (count > 0) {
+                int c = Math.min(size(), count);
+                super.subList(0, c).clear();
+            }
         }
     }
 
@@ -136,13 +175,13 @@ public class ByteQueueList extends CopyOnWriteArrayList<Byte> {
      * @return 参数无效或索引与长度相加超出列表大小时，返回null
      */
     public byte[] copy(int start, int count) {
-       synchronized (lock) {
-           if (start < 0 || count <= 0) return null;
-           if ((start + count) > super.size()) return null;
+        synchronized (lock) {
+            if (start < 0 || count <= 0) return null;
+            if ((start + count) > super.size()) return null;
 
-           List<Byte> buffer = super.subList(start, start + count);
-           return Bytes.toArray(buffer);
-       }
+            List<Byte> buffer = super.subList(start, start + count);
+            return Bytes.toArray(buffer);
+        }
     }
 
     /**
