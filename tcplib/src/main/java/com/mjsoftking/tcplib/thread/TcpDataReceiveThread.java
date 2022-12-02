@@ -64,8 +64,8 @@ public class TcpDataReceiveThread extends Thread {
 
         while (true) {
             try {
-                //10kb缓冲区
-                byte[] buffer = new byte[10 * 1024];
+                //1kb缓冲区
+                byte[] buffer = new byte[4 * 1024];
                 int bufferLength = client.getInputStream().read(buffer);
                 if (bufferLength <= 0) {
                     throw new IOException("Socket closed");

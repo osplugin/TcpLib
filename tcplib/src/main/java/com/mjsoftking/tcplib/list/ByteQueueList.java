@@ -6,10 +6,10 @@ import android.util.Log;
 import com.mjsoftking.tcplib.TcpLibConfig;
 import com.mjsoftking.tcplib.utils.Bytes;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Predicate;
 
 /**
@@ -18,10 +18,11 @@ import java.util.function.Predicate;
  * 作者：mjSoftKing
  * 时间：2021/02/23
  */
-public class ByteQueueList extends CopyOnWriteArrayList<Byte> {
+public class ByteQueueList extends ArrayList<Byte> {
 
     private final static String TAG = ByteQueueList.class.getSimpleName();
     final static transient Object lock = new Object();
+//    ArrayBlockingQueue<Byte> arrayBlockingqueue = new ArrayBlockingQueue<Byte>(Integer.MAX_VALUE);
 
 //    /**
 //     * 将byte[]按照数组顺序逐个添加到队列末尾
@@ -191,14 +192,19 @@ public class ByteQueueList extends CopyOnWriteArrayList<Byte> {
      * @return 长度不合法时返回null
      */
     public byte[] copyAndRemove(int count) {
-        if (count <= 0) return null;
-        if (count > super.size()) return null;
+        synchronized (lock) {
+            if (count <= 0) return null;
+            if ((count) > super.size()) return null;
 
-        byte[] buffer = copy(count);
-
-        removeCountFrame(count);
-
-        return buffer;
+//            Log.w("TCP-TAG", "复制数据：" + System.currentTimeMillis());
+            List<Byte> buffer = super.subList(0, count);
+//            Log.w("TCP-TAG", "转换数据：" + System.currentTimeMillis());
+            byte[] b = Bytes.toArray(buffer);
+//            Log.w("TCP-TAG", "清除数据：" + System.currentTimeMillis());
+            buffer.clear();
+//            Log.w("TCP-TAG", "完成数据：" + System.currentTimeMillis());
+            return b;
+        }
     }
 
 }
