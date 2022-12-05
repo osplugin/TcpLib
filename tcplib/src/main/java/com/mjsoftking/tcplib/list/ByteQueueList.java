@@ -22,18 +22,6 @@ public class ByteQueueList extends ArrayList<Byte> {
 
     private final static String TAG = ByteQueueList.class.getSimpleName();
     final static transient Object lock = new Object();
-//    ArrayBlockingQueue<Byte> arrayBlockingqueue = new ArrayBlockingQueue<Byte>(Integer.MAX_VALUE);
-
-//    /**
-//     * 将byte[]按照数组顺序逐个添加到队列末尾
-//     *
-//     * @param c byte[]
-//     */
-//    public boolean add(byte... c) {
-//        synchronized (lock) {
-//            return this.add(-1, c);
-//        }
-//    }
 
     /**
      * 将byte[]按照数组顺序逐个添加到队列指定索引的末尾
