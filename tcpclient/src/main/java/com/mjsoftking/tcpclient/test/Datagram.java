@@ -23,17 +23,17 @@ public class Datagram implements Serializable {
     /**
      * 报文头，0xDD,0xDD,0xDD,0xDD
      */
-    public final static byte[] HEADER = new byte[]{(byte) 0xDD, (byte) 0xDD, (byte) 0xDD, (byte) 0xDD};
+    public final static byte[] HEADER = new byte[]{(byte) 0x55, (byte) 0x99, (byte) 0x66, (byte) 0x88};
     /**
      * 报文尾，0xFF,0xFF,0xFF,0xFF
      */
-    public final static byte[] FOOTER = new byte[]{(byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF};
+    public final static byte[] FOOTER = new byte[0];
 
     public final static int HEADER_LENGTH = 4;
-    public final static int COMMAND_LENGTH = 2;
+    public final static int COMMAND_LENGTH = 1;
     public final static int DATA_LENGTH = 2;
-    public final static int SIGN_LENGTH = 1;
-    public final static int FOOTER_LENGTH = 4;
+    public final static int SIGN_LENGTH = 0;
+    public final static int FOOTER_LENGTH = 0;
 
     /**
      * 命令，预留2字节
@@ -149,15 +149,15 @@ public class Datagram implements Serializable {
      * 签名
      */
     private void sign() {
-        if (ObjectUtils.isEmpty(data)) {
-            sign = (byte) 0xFF;
-            return;
-        }
-        long mSum = 0;
-        for (byte datum : data) {
-            mSum += (long) datum;
-        }
-        sign = (byte) (mSum & 0xFF);
+//        if (ObjectUtils.isEmpty(data)) {
+//            sign = (byte) 0xFF;
+//            return;
+//        }
+//        long mSum = 0;
+//        for (byte datum : data) {
+//            mSum += (long) datum;
+//        }
+//        sign = (byte) (mSum & 0xFF);
     }
 
     /**
@@ -187,18 +187,16 @@ public class Datagram implements Serializable {
      */
     public byte[] fullData() {
         int dl = dataLength();
-        byte[] buffer = new byte[HEADER_LENGTH + COMMAND_LENGTH + DATA_LENGTH
-                + dl +
-                SIGN_LENGTH + FOOTER_LENGTH];
+        byte[] buffer = new byte[HEADER_LENGTH + COMMAND_LENGTH + DATA_LENGTH + dl];
         System.arraycopy(HEADER, 0, buffer, 0, HEADER.length);
         System.arraycopy(command, 0, buffer, HEADER_LENGTH, COMMAND_LENGTH);
         System.arraycopy(length, 0, buffer, HEADER_LENGTH + COMMAND_LENGTH, DATA_LENGTH);
-        System.arraycopy(data, 0, buffer, HEADER_LENGTH + COMMAND_LENGTH + DATA_LENGTH, dl);
-        buffer[HEADER_LENGTH + COMMAND_LENGTH + DATA_LENGTH
-                + dl] = sign;
-        System.arraycopy(FOOTER, 0, buffer, HEADER_LENGTH + COMMAND_LENGTH + DATA_LENGTH
-                + dl
-                + SIGN_LENGTH, FOOTER.length);
+        System.arraycopy(data, 0, buffer, HEADER_LENGTH + COMMAND_LENGTH + DATA_LENGTH, data.length);
+//        buffer[HEADER_LENGTH + COMMAND_LENGTH + DATA_LENGTH
+//                + dl] = sign;
+//        System.arraycopy(FOOTER, 0, buffer, HEADER_LENGTH + COMMAND_LENGTH + DATA_LENGTH
+//                + dl
+//                + SIGN_LENGTH, FOOTER.length);
         return buffer;
     }
 }

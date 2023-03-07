@@ -56,61 +56,124 @@ public class TcpDataReceiveThread extends Thread {
         this.clientMap = clientMap;
         this.bufferQueue = new ByteQueueList();
         this.isClient = isClient;
+
+        setPriority(Thread.MAX_PRIORITY);
     }
 
     @Override
     public void run() {
         if (null == client) return;
 
-        while (true) {
-            try {
-                //1kb缓冲区
-                byte[] buffer = new byte[4 * 1024];
-                int bufferLength = client.getInputStream().read(buffer);
-                if (bufferLength <= 0) {
-                    throw new IOException("Socket closed");
-                }
+        try {
+            int bufferLength;
+            byte[] buffer = new byte[TcpLibConfig.getInstance().getReceiveReadSize()];
+            while ((bufferLength = client.getInputStream().read(buffer)) > 0) {
                 byte[] dataBuffer = new byte[bufferLength];
                 System.arraycopy(buffer, 0, dataBuffer, 0, bufferLength);
+                ///限制缓存区不可超出此大小，一旦超出需要等待处理线程处理缓存区
+                while (bufferQueue.size() + bufferLength >= TcpLibConfig.getInstance().getReceiveCacheBufferSize())
+                    ;
+
                 bufferQueue.add(dataBuffer);
 
                 if (null == dataDisposeThread || !dataDisposeThread.isAlive()) {
-                    dataDisposeThread = null;
                     dataDisposeThread = new TcpDataDisposeThread(this.servicePort, address, bufferQueue, dataDispose);
                     dataDisposeThread.start();
                 }
-            } catch (Exception e) {
-                if ("Socket closed".equalsIgnoreCase(e.getMessage()) ||
-                        "Socket is closed".equalsIgnoreCase(e.getMessage()) ||
-                        "Connection reset".equalsIgnoreCase(e.getMessage())) {
-                    if (TcpLibConfig.getInstance().isDebugMode()) {
-                        Log.w(TAG, "连接中断," + (isClient ? "服务器地址：" : "客户端地址：") + address);
-                    }
-                } else {
-                    if (TcpLibConfig.getInstance().isDebugMode()) {
-                        Log.e(TAG, e.getMessage(), e);
-                    }
+            }
+
+        } catch (Exception e) {
+            String message = e.getMessage();
+            if ("Socket closed".equalsIgnoreCase(message) ||
+                    "Socket is closed".equalsIgnoreCase(message) ||
+                    "Connection reset".equalsIgnoreCase(message) ||
+                    "Read timed out".equalsIgnoreCase(message)) {
+//                if (TcpLibConfig.getInstance().isDebugMode()) {
+//                    Log.w(TAG, "连接中断," + (isClient ? "服务器地址：" : "客户端地址：") + address);
+//                }
+            } else {
+                if (TcpLibConfig.getInstance().isDebugMode()) {
+                    Log.e(TAG, e.getMessage(), e);
                 }
-                //主动关闭一次
-                try {
-                    client.close();
-                } catch (IOException ignore) {
-                }
-                //已经断开连接
-                //清空对应缓存区，延时清理，给处理器一点处理时间
-                delayClear();
-                //移除缓存队列
-                clientMap.remove(address);
-                if (isClient) {
-                    // 发送与服务器断开事件
-                    EventBus.getDefault().post(new TcpServiceDisconnectEvent(this.servicePort, address));
-                } else {
-                    //发送客户端下线事件
-                    EventBus.getDefault().post(new TcpClientDisconnectEvent(this.servicePort, address));
-                }
-                return;
+            }
+        } finally {
+            if (TcpLibConfig.getInstance().isDebugMode()) {
+                Log.w(TAG, "连接中断," + (isClient ? "服务器地址：" : "客户端地址：") + address);
+            }
+            //主动关闭一次
+            try {
+                client.close();
+            } catch (IOException ignore) {
+            }
+            //已经断开连接
+            //清空对应缓存区，延时清理，给处理器一点处理时间
+            delayClear();
+            //移除缓存队列
+            clientMap.remove(address);
+            if (isClient) {
+                // 发送与服务器断开事件
+                EventBus.getDefault().post(new TcpServiceDisconnectEvent(this.servicePort, address));
+            } else {
+                //发送客户端下线事件
+                EventBus.getDefault().post(new TcpClientDisconnectEvent(this.servicePort, address));
             }
         }
+
+
+//        while (true) {
+//            try {
+//                //1kb缓冲区
+//                byte[] buffer = new byte[TcpLibConfig.getInstance().getReceiveReadSize()];
+//                int bufferLength = client.getInputStream().read(buffer);
+//                if (bufferLength <= 0) {
+//                    throw new IOException("Socket closed");
+//                }
+//                byte[] dataBuffer = new byte[bufferLength];
+//                System.arraycopy(buffer, 0, dataBuffer, 0, bufferLength);
+////                Log.e("TCP", "接收数据大小：" + bufferLength);
+//                ///限制缓存区不可超出此大小，一旦超出需要等待处理线程处理缓存区
+//                while (bufferQueue.size() + bufferLength >= TcpLibConfig.getInstance().getReceiveCacheBufferSize()) {
+//                }
+//
+//                bufferQueue.add(dataBuffer);
+//
+//                if (null == dataDisposeThread || !dataDisposeThread.isAlive()) {
+//                    dataDisposeThread = new TcpDataDisposeThread(this.servicePort, address, bufferQueue, dataDispose);
+//                    dataDisposeThread.start();
+//                }
+//            } catch (Exception e) {
+//                if ("Socket closed".equalsIgnoreCase(e.getMessage()) ||
+//                        "Socket is closed".equalsIgnoreCase(e.getMessage()) ||
+//                        "Connection reset".equalsIgnoreCase(e.getMessage())) {
+//                    if (TcpLibConfig.getInstance().isDebugMode()) {
+//                        Log.w(TAG, "连接中断," + (isClient ? "服务器地址：" : "客户端地址：") + address);
+//                    }
+//                } else {
+//                    if (TcpLibConfig.getInstance().isDebugMode()) {
+//                        Log.e(TAG, e.getMessage(), e);
+//                    }
+//                }
+//                //主动关闭一次
+//                try {
+//                    client.close();
+//                } catch (IOException ignore) {
+//                }
+//                //已经断开连接
+//                //清空对应缓存区，延时清理，给处理器一点处理时间
+//                delayClear();
+//                //移除缓存队列
+//                clientMap.remove(address);
+//                if (isClient) {
+//                    // 发送与服务器断开事件
+//                    EventBus.getDefault().post(new TcpServiceDisconnectEvent(this.servicePort, address));
+//                } else {
+//                    //发送客户端下线事件
+//                    EventBus.getDefault().post(new TcpClientDisconnectEvent(this.servicePort, address));
+//                }
+//                return;
+//            } finally {
+//            }
+//        }
     }
 
     private void delayClear() {

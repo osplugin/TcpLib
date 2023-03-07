@@ -22,14 +22,19 @@ public class TcpDataDisposeThread extends Thread {
         this.address = address;
         this.bufferQueue = bufferQueue;
         this.dataDispose = dataDispose;
+
+//        setPriority(Thread.MAX_PRIORITY);
     }
 
     @Override
     public void run() {
-        while (bufferQueue.size() > 0) {
-            if (null != dataDispose) {
-                dataDispose.dispose(bufferQueue, servicePort, address);
+        try {
+            while (bufferQueue.size() > 0) {
+                if (null != dataDispose) {
+                    dataDispose.dispose(bufferQueue, servicePort, address);
+                }
             }
+        } catch (Exception ignore) {
         }
     }
 }

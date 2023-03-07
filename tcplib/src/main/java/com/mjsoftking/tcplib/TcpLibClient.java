@@ -11,6 +11,7 @@ import com.mjsoftking.tcplib.thread.TcpDataReceiveThread;
 import org.greenrobot.eventbus.EventBus;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -77,9 +78,11 @@ public class TcpLibClient {
                         return;
                     }
 
-                    Socket socket = new Socket(ipAddress, port);
+                    Socket socket = new Socket();
                     //超时不限制
                     socket.setSoTimeout(0);
+                    socket.setReceiveBufferSize(TcpLibConfig.getInstance().getTcpClientReceiveBufferSize());
+                    socket.connect(new InetSocketAddress(ipAddress, port));
                     //线程安全的map
                     SERVICE_MAP.put(address, builder.setSocket(socket));
                     //发送服务器已连接事件

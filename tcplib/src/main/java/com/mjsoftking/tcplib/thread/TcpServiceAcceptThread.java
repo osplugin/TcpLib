@@ -37,6 +37,8 @@ public class TcpServiceAcceptThread extends Thread {
         this.serverSocket = serverSocket;
         this.clientMap = clientMap;
         this.builder = builder;
+
+        setPriority(Thread.MAX_PRIORITY);
     }
 
     @Override
@@ -44,6 +46,14 @@ public class TcpServiceAcceptThread extends Thread {
         while (true) {
             try {
                 Socket client = serverSocket.accept();
+                try {
+                    client.setSoTimeout(TcpLibConfig.getInstance().getServerReadTimeout());
+                    client.setReceiveBufferSize(TcpLibConfig.getInstance().getTcpServiceReceiveBufferSize());
+                    client.setSendBufferSize(TcpLibConfig.getInstance().getTcpServiceReceiveBufferSize());
+//                    client.setTcpNoDelay(true);
+                } catch (Exception ee) {
+                    //ignore
+                }
                 String address = client.getInetAddress().getHostAddress() + ":" + client.getPort();
                 //存入在线客户端缓存
                 clientMap.put(address, builder.copy().setSocket(client));

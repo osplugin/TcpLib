@@ -21,21 +21,23 @@ import java.util.function.Predicate;
 public class ByteQueueList extends ArrayList<Byte> {
 
     private final static String TAG = ByteQueueList.class.getSimpleName();
-    final static transient Object lock = new Object();
 
     /**
      * 将byte[]按照数组顺序逐个添加到队列指定索引的末尾
      *
      * @param c byte[]
      */
-    public boolean add(byte... c) {
-        synchronized (lock) {
-            //数组为null或者大小为0时，直接返回false
-            if (null == c || c.length == 0) {
-                return false;
-            }
-            return super.addAll(Bytes.asList(c));
+    public synchronized boolean add(byte... c) {
+        //数组为null或者大小为0时，直接返回false
+        if (null == c || c.length == 0) {
+            return false;
         }
+        return super.addAll(Bytes.asList(c));
+    }
+
+    @Override
+    public synchronized void clear() {
+        super.clear();
     }
 
     @Override
@@ -90,7 +92,7 @@ public class ByteQueueList extends ArrayList<Byte> {
      * 若匹配则移除第一个头数据匹配时索引前的全部数据；
      * 反之移除一个字节，等待下次执行方法。
      */
-    public boolean removeFrameToHeader(byte[] header) {
+    public synchronized boolean removeFrameToHeader(byte[] header) {
         if (null == header || header.length == 0) return false;
 
         int size = size();
@@ -117,19 +119,17 @@ public class ByteQueueList extends ArrayList<Byte> {
     /**
      * 从开始位置移除一个数据
      */
-    public Byte removeFirstFrame() {
-        synchronized (lock) {
-            try {
-                if (size() > 0) {
-                    return super.remove(0);
-                }
-                return null;
-            } catch (IndexOutOfBoundsException e) {
-                if (TcpLibConfig.getInstance().isDebugMode()) {
-                    Log.w(TAG, "队列移除首帧失败，" + e.getMessage());
-                }
-                return null;
+    public synchronized Byte removeFirstFrame() {
+        try {
+            if (size() > 0) {
+                return super.remove(0);
             }
+            return null;
+        } catch (IndexOutOfBoundsException e) {
+            if (TcpLibConfig.getInstance().isDebugMode()) {
+                Log.w(TAG, "队列移除首帧失败，" + e.getMessage());
+            }
+            return null;
         }
     }
 
@@ -138,12 +138,10 @@ public class ByteQueueList extends ArrayList<Byte> {
      *
      * @param count 长度，大于0
      */
-    public void removeCountFrame(int count) {
-        synchronized (lock) {
-            if (count > 0) {
-                int c = Math.min(size(), count);
-                super.subList(0, c).clear();
-            }
+    public synchronized void removeCountFrame(int count) {
+        if (count > 0) {
+            int c = Math.min(size(), count);
+            super.subList(0, c).clear();
         }
     }
 
@@ -163,14 +161,12 @@ public class ByteQueueList extends ArrayList<Byte> {
      * @param count 复制的长度
      * @return 参数无效或索引与长度相加超出列表大小时，返回null
      */
-    public byte[] copy(int start, int count) {
-        synchronized (lock) {
-            if (start < 0 || count <= 0) return null;
-            if ((start + count) > super.size()) return null;
+    public synchronized byte[] copy(int start, int count) {
+        if (start < 0 || count <= 0) return null;
+        if ((start + count) > super.size()) return null;
 
-            List<Byte> buffer = super.subList(start, start + count);
-            return Bytes.toArray(buffer);
-        }
+        List<Byte> buffer = super.subList(start, start + count);
+        return Bytes.toArray(buffer);
     }
 
     /**
@@ -179,20 +175,18 @@ public class ByteQueueList extends ArrayList<Byte> {
      * @param count 长度，大于0
      * @return 长度不合法时返回null
      */
-    public byte[] copyAndRemove(int count) {
-        synchronized (lock) {
-            if (count <= 0) return null;
-            if ((count) > super.size()) return null;
+    public synchronized byte[] copyAndRemove(int count) {
+        if (count <= 0) return null;
+        if ((count) > super.size()) return null;
 
 //            Log.w("TCP-TAG", "复制数据：" + System.currentTimeMillis());
-            List<Byte> buffer = super.subList(0, count);
+        List<Byte> buffer = super.subList(0, count);
 //            Log.w("TCP-TAG", "转换数据：" + System.currentTimeMillis());
-            byte[] b = Bytes.toArray(buffer);
+        byte[] b = Bytes.toArray(buffer);
 //            Log.w("TCP-TAG", "清除数据：" + System.currentTimeMillis());
-            buffer.clear();
+        buffer.clear();
 //            Log.w("TCP-TAG", "完成数据：" + System.currentTimeMillis());
-            return b;
-        }
+        return b;
     }
 
 }

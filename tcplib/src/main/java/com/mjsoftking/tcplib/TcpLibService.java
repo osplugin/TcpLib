@@ -10,6 +10,7 @@ import com.mjsoftking.tcplib.thread.TcpServiceAcceptThread;
 import org.greenrobot.eventbus.EventBus;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -61,9 +62,11 @@ public class TcpLibService {
             return;
         }
         try {
-            ServerSocket serverSocket = new ServerSocket(port, backlog);
+            ServerSocket serverSocket = new ServerSocket();
             //超时不限制
             serverSocket.setSoTimeout(0);
+            serverSocket.setReceiveBufferSize(TcpLibConfig.getInstance().getTcpServiceReceiveBufferSize());
+            serverSocket.bind(new InetSocketAddress("0.0.0.0", port), backlog);
             //线程安全的map
             portMap.put(port, new ConcurrentHashMap<>());
             serverSocketMap.put(port, serverSocket);

@@ -28,6 +28,7 @@ android {
         //启用数据绑定，MVVM
         dataBinding true
     }
+    namespace 'com.mjsoftking.tcpclient'
 }
 
 dependencies {

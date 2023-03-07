@@ -32,16 +32,20 @@ import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
-import java.nio.charset.Charset;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
     private final static String TAG = MainActivity.class.getSimpleName();
 
     private ActivityMainBinding binding;
+
+    //单例线程池
+    private ExecutorService sendMessageExecutorService;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,12 +54,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         //配置debug模式
         TcpLibConfig.getInstance()
                 .setDebugMode(BuildConfig.DEBUG);
+        this.sendMessageExecutorService = Executors.newSingleThreadExecutor();
 
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main);
         binding.setClick(this);
         binding.setIsConnect(false);
 
-        binding.setEtIp("127.0.0.1");
+        binding.setEtIp("192.168.1.105");
         binding.setEtPort("5000");
 
         binding.tipLayout.setOnLongClickListener(v -> {
@@ -65,6 +70,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private long exitTime = 0;
+
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         // 判断按下的是不是返回键
@@ -119,7 +125,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 Datagram datagram = (Datagram) event.getContent();
 
                 printf("向服务端端口: " + et.getServicePort() + ", 服务端地址: "
-                        + et.getAddress() + ", 发送消息: " + new String(datagram.getData()), false);
+                        + et.getAddress() + ", 发送消息字节数: " + datagram.getData().length, false);
             }
         }
     }
@@ -168,9 +174,84 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 printf("与服务器连接已断开", true);
                 return;
             }
-            TcpLibClient.getInstance().sendMessage(new Datagram(new byte[]{0x00,0x01},
-                    binding.getEtContent().getBytes(Charset.forName("UTF-8"))));
+
+//            for (int i = 0; i < 159; ++i) {
+//                byte[] b = new byte[]{0x01, 0x00, (byte) i,
+//                        1, 2, 3, 4, 5, (byte) 205, (byte) 205, 8, 9, 0,
+//                        1, 2, 3, 4, 5, (byte) 205, (byte) 205, 8, 9, 0,
+//                        1, 2, 3, 4, 5, (byte) 205, (byte) 205, 8, 9, 0,
+//                        1, 2, 3, 4, 5, (byte) 205, (byte) 205, 8, 9, 0,
+//                        1, 2, 3, 4, 5, (byte) 205, (byte) 205, 8, 9, 0,
+//                        1, 2, 3, 4, 5, (byte) 205, (byte) 205, 8, 9, 0,
+//                        1, 2, 3, 4, 5, (byte) 205, (byte) 205, 8, 9, 0,
+//                        1, 2, 3, 4, 5, (byte) 205, (byte) 205, 8, 9, 0,
+//                        1, 2, 3, 4, 5, (byte) 205, (byte) 205, 8, 9, 0,
+//                        1, 2, 3, 4, 5, (byte) 205, (byte) 205, 8, 9, 0,
+//                        1, 2, 3, 4, 5, (byte) 205, (byte) 205, 8, 9, 0,
+//                        1, 2, 3, 4, 5, (byte) 205, (byte) 205, 8, 9, 0,
+//                        1, 2, 3, 4, 5, (byte) 205, (byte) 205, 8, 9, 0,
+//                        1, 2, 3, 4, 5, (byte) 205, (byte) 205, 8, 9, 0,
+//                        1, 2, 3, 4, 5, (byte) 205, (byte) 205, 8, 9, 0,
+//                        1, 2, 3, 4, 5, (byte) 205, (byte) 205, 8, 9, 0,
+//                        1, 2, 3, 4, 5, (byte) 205, (byte) 205, 8, 9, 0,
+//                        1, 2, 3, 4, 5, (byte) 205, (byte) 205, 8, 9, 0,
+//                        1, 2, 3, 4, 5, (byte) 205, (byte) 205, 8, 9, 0,
+//                        1, 2, 3, 4, 5, (byte) 205, (byte) 205, 8, 9, 0,
+//                        1, 2, 3, 4, 5, (byte) 205, (byte) 205, 8, 9, 0,
+//                        1, 2, 3, 4, 5, (byte) 205, (byte) 205, 8, 9, 0,
+//                        1, 2, 3, 4, 5, (byte) 205, (byte) 205, 8, 9, 0,
+//                        1, 2, 3, 4, 5, (byte) 205, (byte) 205, 8, 9, 0,
+//                        1, 2, 3, 4, 5, (byte) 205, (byte) 205, 8, 9, 0,
+//                        1, 2, 3, 4, 5, (byte) 205, (byte) 205, 8, 9, 0,
+//                        1, 2, 3, 4, 5, (byte) 205, (byte) 205, 8, 9, 0,
+//                        1, 2, 3, 4, 5, (byte) 205, (byte) 205, 8, 9, 0,
+//                        1, 2, 3, 4, 5, (byte) 205, (byte) 205, 8, 9, 0,
+//                        1, 2, 3, 4, 5, (byte) 205, (byte) 205, 8, 9, 0,
+//                        1, 2, 3, 4, 5, (byte) 205, (byte) 205, 8, 9, 0,
+//                        1, 2, 3, 4, 5, (byte) 205, (byte) 205, 8, 9, 0,
+//                        1, 2, 3, 4, 5, (byte) 205, (byte) 205, 8, 9, 0,
+//                        1, 2, 3, 4, 5, (byte) 205, (byte) 205, 8, 9, 0,
+//                        1, 2, 3, 4, 5, (byte) 205, (byte) 205, 8, 9, 0,
+//                        1, 2, 3, 4, 5, (byte) 205, (byte) 205, 8, 9, 0,
+//                        1, 2, 3, 4, 5, (byte) 205, (byte) 205, 8, 9, 0,
+//                        1, 2, 3, 4, 5, (byte) 205, (byte) 205, 8, 9, 0,
+//                        1, 2, 3, 4, 5, (byte) 205, (byte) 205, 8, 9, 0,
+//                        1, 2, 3, 4, 5, (byte) 205, (byte) 205, 8, 9, 0,
+//                        0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+//                        0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+//                        0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+//                        0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+//                        0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+//                        0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+//                        0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+//                        0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+//                        0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+//                        0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+//                        0, 0, 0, 0
+//                };
+//
+//                TcpLibClient.getInstance().sendMessage(new Datagram(new byte[]{(byte) 0x10},
+//                        b));
+
+
+            TcpLibClient.getInstance().sendMessage(new Datagram(new byte[]{(byte) 0xB1},
+                    new byte[]{0x01, 0x31, 0x2E, 0x31}));
+
+//        }
+
+//            sendMessageExecutorService.submit(new Runnable() {
+//                @Override
+//                public void run() {
+//
+//
+//                }
+//            });
+
+
+//            TcpLibClient.getInstance().sendMessage(new Datagram(new byte[]{0x00, 0x01},
+//                    binding.getEtContent().getBytes(Charset.forName("UTF-8"))));
         }
+
     }
 
 
