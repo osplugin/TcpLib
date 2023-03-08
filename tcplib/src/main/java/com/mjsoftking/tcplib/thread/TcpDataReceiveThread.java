@@ -72,17 +72,16 @@ public class TcpDataReceiveThread extends Thread {
             byte[] buffer = new byte[TcpLibConfig.getInstance().getReceiveReadSize()];
             InputStream inputStream = client.getInputStream();
             while ((bufferLength = inputStream.read(buffer)) > 0) {
-                byte[] dataBuffer = new byte[bufferLength];
-                System.arraycopy(buffer, 0, dataBuffer, 0, bufferLength);
                 ///限制缓存区不可超出此大小，一旦超出需要等待处理线程处理缓存区
                 while (bufferQueue.size() + bufferLength >= TcpLibConfig.getInstance().getReceiveCacheBufferSize())
                     ;
-//                if ((System.currentTimeMillis() - time) > 5) {
-//                    Log.e("TCP", "读取缓存区数据(>5ms), 时间差：" + (System.currentTimeMillis() - time) + "，数据大小：" + bufferLength);
-//                }
-//                time = System.currentTimeMillis();
+                if ((System.currentTimeMillis() - time) > 5) {
+                    Log.e("TCP", "读取缓存区数据(>5ms), 时间差：" + (System.currentTimeMillis() - time) + "，数据大小：" + bufferLength);
+                }
+                time = System.currentTimeMillis();
 //
-                bufferQueue.add(dataBuffer);
+                bufferQueue.add(bufferLength, buffer);
+
                 if (null == dataDisposeThread || !dataDisposeThread.isAlive() || dataDisposeThread.isInterrupted()) {
                     if (null != dataDisposeThread) {
                         dataDisposeThread.interrupt();
@@ -131,61 +130,6 @@ public class TcpDataReceiveThread extends Thread {
             }
         }
 
-
-//        while (true) {
-//            try {
-//                //1kb缓冲区
-//                byte[] buffer = new byte[TcpLibConfig.getInstance().getReceiveReadSize()];
-//                int bufferLength = client.getInputStream().read(buffer);
-//                if (bufferLength <= 0) {
-//                    throw new IOException("Socket closed");
-//                }
-//                byte[] dataBuffer = new byte[bufferLength];
-//                System.arraycopy(buffer, 0, dataBuffer, 0, bufferLength);
-////                Log.e("TCP", "接收数据大小：" + bufferLength);
-//                ///限制缓存区不可超出此大小，一旦超出需要等待处理线程处理缓存区
-//                while (bufferQueue.size() + bufferLength >= TcpLibConfig.getInstance().getReceiveCacheBufferSize()) {
-//                }
-//
-//                bufferQueue.add(dataBuffer);
-//
-//                if (null == dataDisposeThread || !dataDisposeThread.isAlive()) {
-//                    dataDisposeThread = new TcpDataDisposeThread(this.servicePort, address, bufferQueue, dataDispose);
-//                    dataDisposeThread.start();
-//                }
-//            } catch (Exception e) {
-//                if ("Socket closed".equalsIgnoreCase(e.getMessage()) ||
-//                        "Socket is closed".equalsIgnoreCase(e.getMessage()) ||
-//                        "Connection reset".equalsIgnoreCase(e.getMessage())) {
-//                    if (TcpLibConfig.getInstance().isDebugMode()) {
-//                        Log.w(TAG, "连接中断," + (isClient ? "服务器地址：" : "客户端地址：") + address);
-//                    }
-//                } else {
-//                    if (TcpLibConfig.getInstance().isDebugMode()) {
-//                        Log.e(TAG, e.getMessage(), e);
-//                    }
-//                }
-//                //主动关闭一次
-//                try {
-//                    client.close();
-//                } catch (IOException ignore) {
-//                }
-//                //已经断开连接
-//                //清空对应缓存区，延时清理，给处理器一点处理时间
-//                delayClear();
-//                //移除缓存队列
-//                clientMap.remove(address);
-//                if (isClient) {
-//                    // 发送与服务器断开事件
-//                    EventBus.getDefault().post(new TcpServiceDisconnectEvent(this.servicePort, address));
-//                } else {
-//                    //发送客户端下线事件
-//                    EventBus.getDefault().post(new TcpClientDisconnectEvent(this.servicePort, address));
-//                }
-//                return;
-//            } finally {
-//            }
-//        }
     }
 
     private void delayClear() {

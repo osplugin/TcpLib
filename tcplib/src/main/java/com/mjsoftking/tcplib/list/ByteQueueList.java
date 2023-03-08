@@ -1,15 +1,6 @@
 package com.mjsoftking.tcplib.list;
 
-import android.annotation.SuppressLint;
-import android.util.Log;
-
 import com.mjsoftking.tcplib.TcpLibConfig;
-import com.mjsoftking.tcplib.utils.Bytes;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.function.Predicate;
 
 /**
  * 用途：线程安全的 byte 列表
@@ -17,9 +8,42 @@ import java.util.function.Predicate;
  * 作者：mjSoftKing
  * 时间：2021/02/23
  */
-public class ByteQueueList extends ArrayList<Byte> {
+public class ByteQueueList {
 
     private final static String TAG = ByteQueueList.class.getSimpleName();
+
+    transient byte[] elementData;
+    int size;
+
+    public ByteQueueList() {
+        int length = Math.max((int) (TcpLibConfig.getInstance().getReceiveCacheBufferSize() * 1.5), 10 * 1024);
+        this.elementData = new byte[length];
+    }
+
+//    private void ensureExplicitCapacity(int minCapacity) {
+//        // overflow-conscious code
+//        if (minCapacity - elementData.length > 0)
+//            grow(minCapacity);
+//    }
+//
+//    private void grow(int minCapacity) {
+//        // overflow-conscious code
+//        int oldCapacity = elementData.length;
+//        int newCapacity = oldCapacity + (oldCapacity >> 1);
+//        if (newCapacity - minCapacity < 0)
+//            newCapacity = minCapacity;
+//        if (newCapacity - Integer.MAX_VALUE > 0)
+//            newCapacity = Integer.MAX_VALUE;
+//        // minCapacity is usually close to size, so this is a win:
+//        elementData = Arrays.copyOf(elementData, newCapacity);
+//    }
+
+    public synchronized boolean add(int length, byte... c) {
+//        ensureExplicitCapacity(size + numNew);
+        System.arraycopy(c, 0, elementData, size, length);
+        size += length;
+        return length != 0;
+    }
 
     /**
      * 将byte[]按照数组顺序逐个添加到队列指定索引的末尾
@@ -27,55 +51,32 @@ public class ByteQueueList extends ArrayList<Byte> {
      * @param c byte[]
      */
     public synchronized boolean add(byte... c) {
-        return super.addAll(Bytes.asList(c));
+        return add(c.length, c);
     }
 
-    @Override
     public synchronized void clear() {
-        super.clear();
+//        // clear to let GC do its work
+//        for (int i = 0; i < size; i++)
+//            elementData[i] = 0;
+
+        size = 0;
     }
 
-    @Override
-    @Deprecated
-    public boolean add(Byte aByte) {
-        return false;
+    public int indexOf(byte o) {
+        {
+            for (int i = 0; i < size; i++)
+                if (o == (elementData[i]))
+                    return i;
+        }
+        return -1;
     }
 
-    @Override
-    @Deprecated
-    public boolean addAll(int index, Collection<? extends Byte> c) {
-        return false;
+    public int size() {
+        return size;
     }
 
-    @Override
-    @Deprecated
-    public boolean addAll(Collection<? extends Byte> c) {
-        return false;
-    }
-
-    @Override
-    @Deprecated
-    public Byte remove(int index) {
-        return null;
-    }
-
-    @Override
-    @Deprecated
-    public boolean removeAll(Collection<?> c) {
-        return false;
-    }
-
-    @SuppressLint("NewApi")
-    @Override
-    @Deprecated
-    public boolean removeIf(Predicate<? super Byte> filter) {
-        return false;
-    }
-
-    @Override
-    @Deprecated
-    public boolean remove(Object o) {
-        return false;
+    public byte get(int index) {
+        return elementData[index];
     }
 
     /**
@@ -99,7 +100,7 @@ public class ByteQueueList extends ArrayList<Byte> {
 
         boolean noExist = false;
         for (int i = 1; i < le; ++i) {
-            if (header[i] != get(index + i)) {
+            if (header[i] != elementData[index + i]) {
                 noExist = true;
                 break;
             }
@@ -115,18 +116,8 @@ public class ByteQueueList extends ArrayList<Byte> {
     /**
      * 从开始位置移除一个数据
      */
-    public synchronized Byte removeFirstFrame() {
-        try {
-            if (size() > 0) {
-                return super.remove(0);
-            }
-            return null;
-        } catch (IndexOutOfBoundsException e) {
-            if (TcpLibConfig.getInstance().isDebugMode()) {
-                Log.w(TAG, "队列移除首帧失败，" + e.getMessage());
-            }
-            return null;
-        }
+    public synchronized void removeFirstFrame() {
+        removeCountFrame(1);
     }
 
     /**
@@ -136,8 +127,14 @@ public class ByteQueueList extends ArrayList<Byte> {
      */
     public synchronized void removeCountFrame(int count) {
         if (count > 0) {
-            int c = Math.min(size(), count);
-            super.subList(0, c).clear();
+            int c = Math.min(size, count);
+
+            int numMoved = size - c;
+            if (numMoved > 0)
+                System.arraycopy(elementData, c, elementData, 0,
+                        numMoved);
+
+            size = numMoved;
         }
     }
 
@@ -159,10 +156,12 @@ public class ByteQueueList extends ArrayList<Byte> {
      */
     public synchronized byte[] copy(int start, int count) {
         if (start < 0 || count <= 0) return null;
-        if ((start + count) > super.size()) return null;
+        if ((start + count) > size) return null;
 
-        List<Byte> buffer = super.subList(start, start + count);
-        return Bytes.toArray(buffer);
+        byte[] buffer = new byte[count];
+        System.arraycopy(elementData, start, buffer, 0,
+                count);
+        return buffer;
     }
 
     /**
@@ -173,16 +172,20 @@ public class ByteQueueList extends ArrayList<Byte> {
      */
     public synchronized byte[] copyAndRemove(int count) {
         if (count <= 0) return null;
-        if ((count) > super.size()) return null;
+        if ((count) > size) return null;
 
-//            Log.w("TCP-TAG", "复制数据：" + System.currentTimeMillis());
-        List<Byte> buffer = super.subList(0, count);
-//            Log.w("TCP-TAG", "转换数据：" + System.currentTimeMillis());
-        byte[] b = Bytes.toArray(buffer);
-//            Log.w("TCP-TAG", "清除数据：" + System.currentTimeMillis());
-        buffer.clear();
-//            Log.w("TCP-TAG", "完成数据：" + System.currentTimeMillis());
-        return b;
+        byte[] buffer = copy(0, count);
+        removeCountFrame(count);
+        return buffer;
+//
+////            Log.w("TCP-TAG", "复制数据：" + System.currentTimeMillis());
+//        List<Byte> buffer = super.subList(0, count);
+////            Log.w("TCP-TAG", "转换数据：" + System.currentTimeMillis());
+//        byte[] b = Bytes.toArray(buffer);
+////            Log.w("TCP-TAG", "清除数据：" + System.currentTimeMillis());
+//        buffer.clear();
+////            Log.w("TCP-TAG", "完成数据：" + System.currentTimeMillis());
+//        return b;
     }
 
 }
