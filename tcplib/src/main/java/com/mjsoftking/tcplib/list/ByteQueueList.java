@@ -7,7 +7,6 @@ import com.mjsoftking.tcplib.TcpLibConfig;
 import com.mjsoftking.tcplib.utils.Bytes;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Predicate;
@@ -28,10 +27,6 @@ public class ByteQueueList extends ArrayList<Byte> {
      * @param c byte[]
      */
     public synchronized boolean add(byte... c) {
-        //数组为null或者大小为0时，直接返回false
-        if (null == c || c.length == 0) {
-            return false;
-        }
         return super.addAll(Bytes.asList(c));
     }
 
@@ -92,27 +87,28 @@ public class ByteQueueList extends ArrayList<Byte> {
      * 若匹配则移除第一个头数据匹配时索引前的全部数据；
      * 反之移除一个字节，等待下次执行方法。
      */
-    public synchronized boolean removeFrameToHeader(byte[] header) {
-        if (null == header || header.length == 0) return false;
+    public synchronized int removeFrameToHeader(byte[] header) {
+        if (null == header || header.length == 0) return -1;
 
-        int size = size();
         int le = header.length;
 
         int index = indexOf(header[0]);
         if (index == -1) {
-            removeCountFrame(size);
-            return false;
+            return -1;
         }
-        if (Arrays.equals(header, copy(index, le))) {
-            removeCountFrame(index);
-            return true;
-        } else {
-            if (index == 0) {
-                removeFirstFrame();
-            } else {
-                removeCountFrame(index);
+
+        boolean noExist = false;
+        for (int i = 1; i < le; ++i) {
+            if (header[i] != get(index + i)) {
+                noExist = true;
+                break;
             }
-            return false;
+        }
+
+        if (!noExist) {
+            return index;
+        } else {
+            return -1;
         }
     }
 

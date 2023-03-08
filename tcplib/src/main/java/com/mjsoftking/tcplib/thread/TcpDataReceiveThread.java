@@ -13,6 +13,7 @@ import com.mjsoftking.tcplib.list.ByteQueueList;
 import org.greenrobot.eventbus.EventBus;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.Socket;
 import java.util.Map;
 
@@ -60,6 +61,8 @@ public class TcpDataReceiveThread extends Thread {
         setPriority(Thread.MAX_PRIORITY);
     }
 
+    long time;
+
     @Override
     public void run() {
         if (null == client) return;
@@ -67,16 +70,23 @@ public class TcpDataReceiveThread extends Thread {
         try {
             int bufferLength;
             byte[] buffer = new byte[TcpLibConfig.getInstance().getReceiveReadSize()];
-            while ((bufferLength = client.getInputStream().read(buffer)) > 0) {
+            InputStream inputStream = client.getInputStream();
+            while ((bufferLength = inputStream.read(buffer)) > 0) {
                 byte[] dataBuffer = new byte[bufferLength];
                 System.arraycopy(buffer, 0, dataBuffer, 0, bufferLength);
                 ///限制缓存区不可超出此大小，一旦超出需要等待处理线程处理缓存区
                 while (bufferQueue.size() + bufferLength >= TcpLibConfig.getInstance().getReceiveCacheBufferSize())
                     ;
-
+//                if ((System.currentTimeMillis() - time) > 5) {
+//                    Log.e("TCP", "读取缓存区数据(>5ms), 时间差：" + (System.currentTimeMillis() - time) + "，数据大小：" + bufferLength);
+//                }
+//                time = System.currentTimeMillis();
+//
                 bufferQueue.add(dataBuffer);
-
-                if (null == dataDisposeThread || !dataDisposeThread.isAlive()) {
+                if (null == dataDisposeThread || !dataDisposeThread.isAlive() || dataDisposeThread.isInterrupted()) {
+                    if (null != dataDisposeThread) {
+                        dataDisposeThread.interrupt();
+                    }
                     dataDisposeThread = new TcpDataDisposeThread(this.servicePort, address, bufferQueue, dataDispose);
                     dataDisposeThread.start();
                 }
@@ -84,8 +94,10 @@ public class TcpDataReceiveThread extends Thread {
 
         } catch (Exception e) {
             String message = e.getMessage();
-            if ("Socket closed".equalsIgnoreCase(message) ||
-                    "Socket is closed".equalsIgnoreCase(message) ||
+            if ("Socket is closed".equalsIgnoreCase(message) ||
+                    "Socket input is shutdown".equalsIgnoreCase(message) ||
+                    "Socket is not connected".equalsIgnoreCase(message) ||
+                    "Socket closed".equalsIgnoreCase(message) ||
                     "Connection reset".equalsIgnoreCase(message) ||
                     "Read timed out".equalsIgnoreCase(message)) {
 //                if (TcpLibConfig.getInstance().isDebugMode()) {

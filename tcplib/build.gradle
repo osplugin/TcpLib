@@ -5,12 +5,12 @@ plugins {
 }
 
 android {
-    compileSdkVersion 30
+    compileSdkVersion 32
     buildToolsVersion "30.0.3"
 
     defaultConfig {
         minSdkVersion 16
-        targetSdkVersion 30
+        targetSdkVersion 32
 
         consumerProguardFiles "consumer-rules.pro"
     }
@@ -21,10 +21,10 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
-    lint {
-        abortOnError false
-        checkReleaseBuilds false
-    }
+//    lint {
+//        abortOnError false
+//        checkReleaseBuilds false
+//    }
     namespace 'com.mjsoftking.tcplib'
 
 }
