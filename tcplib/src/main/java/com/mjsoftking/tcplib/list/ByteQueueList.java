@@ -16,30 +16,15 @@ public class ByteQueueList {
     int size;
 
     public ByteQueueList() {
-        int length = Math.max((int) (TcpLibConfig.getInstance().getReceiveCacheBufferSize() * 1.5), 10 * 1024);
+        int length = Math.max((int) (TcpLibConfig.getInstance().getReceiveCacheBufferSize() * 1.5), 100 * 1024);
         this.elementData = new byte[length];
     }
 
-//    private void ensureExplicitCapacity(int minCapacity) {
-//        // overflow-conscious code
-//        if (minCapacity - elementData.length > 0)
-//            grow(minCapacity);
-//    }
-//
-//    private void grow(int minCapacity) {
-//        // overflow-conscious code
-//        int oldCapacity = elementData.length;
-//        int newCapacity = oldCapacity + (oldCapacity >> 1);
-//        if (newCapacity - minCapacity < 0)
-//            newCapacity = minCapacity;
-//        if (newCapacity - Integer.MAX_VALUE > 0)
-//            newCapacity = Integer.MAX_VALUE;
-//        // minCapacity is usually close to size, so this is a win:
-//        elementData = Arrays.copyOf(elementData, newCapacity);
-//    }
+    public synchronized boolean add(byte c) {
+        return add(1, c);
+    }
 
     public synchronized boolean add(int length, byte... c) {
-//        ensureExplicitCapacity(size + numNew);
         System.arraycopy(c, 0, elementData, size, length);
         size += length;
         return length != 0;
@@ -55,10 +40,6 @@ public class ByteQueueList {
     }
 
     public synchronized void clear() {
-//        // clear to let GC do its work
-//        for (int i = 0; i < size; i++)
-//            elementData[i] = 0;
-
         size = 0;
     }
 
@@ -172,20 +153,11 @@ public class ByteQueueList {
      */
     public synchronized byte[] copyAndRemove(int count) {
         if (count <= 0) return null;
-        if ((count) > size) return null;
+        if (count > size) return null;
 
         byte[] buffer = copy(0, count);
         removeCountFrame(count);
         return buffer;
-//
-////            Log.w("TCP-TAG", "复制数据：" + System.currentTimeMillis());
-//        List<Byte> buffer = super.subList(0, count);
-////            Log.w("TCP-TAG", "转换数据：" + System.currentTimeMillis());
-//        byte[] b = Bytes.toArray(buffer);
-////            Log.w("TCP-TAG", "清除数据：" + System.currentTimeMillis());
-//        buffer.clear();
-////            Log.w("TCP-TAG", "完成数据：" + System.currentTimeMillis());
-//        return b;
     }
 
 }

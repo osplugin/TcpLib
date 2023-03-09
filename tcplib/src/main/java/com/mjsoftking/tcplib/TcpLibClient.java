@@ -82,6 +82,9 @@ public class TcpLibClient {
                     //超时不限制
                     socket.setSoTimeout(0);
                     socket.setReceiveBufferSize(TcpLibConfig.getInstance().getTcpClientReceiveBufferSize());
+                    socket.setSendBufferSize(TcpLibConfig.getInstance().getTcpClientReceiveBufferSize());
+//                    socket.setTcpNoDelay(true);
+//                    socket.setKeepAlive();
                     socket.connect(new InetSocketAddress(ipAddress, port));
                     //线程安全的map
                     SERVICE_MAP.put(address, builder.setSocket(socket));
