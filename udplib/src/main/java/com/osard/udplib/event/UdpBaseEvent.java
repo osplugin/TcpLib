@@ -1,0 +1,43 @@
+package com.osard.udplib.event;
+
+import java.io.Serializable;
+
+/**
+ * 用途：
+ * <p>
+ * 作者：mjSoftKing
+ * 时间：2021/02/22
+ */
+public abstract class UdpBaseEvent implements Serializable {
+
+    protected int servicePort;
+    protected String address;
+
+    /**
+     * @param servicePort 服务端口
+     * @param address     地址，ip:port
+     */
+    public UdpBaseEvent(int servicePort, String address) {
+        this.servicePort = servicePort;
+        this.address = address;
+    }
+
+    /**
+     * @param address 地址，ip:port
+     */
+    public UdpBaseEvent(String address) {
+        this.servicePort = Integer.parseInt(address.split(":")[1]);
+        this.address = address;
+    }
+
+    public UdpBaseEvent() {
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public int getServicePort() {
+        return servicePort;
+    }
+}

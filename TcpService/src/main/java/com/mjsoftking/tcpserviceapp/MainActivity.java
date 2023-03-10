@@ -15,6 +15,7 @@ import androidx.databinding.DataBindingUtil;
 
 import com.blankj.utilcode.util.CollectionUtils;
 import com.mjsoftking.dialogutilslib.DialogLibCommon;
+import com.mjsoftking.tcplib.BuildConfig;
 import com.mjsoftking.tcplib.TcpLibConfig;
 import com.mjsoftking.tcplib.TcpLibService;
 import com.mjsoftking.tcplib.dispose.TcpDataBuilder;
@@ -32,6 +33,9 @@ import com.mjsoftking.tcpserviceapp.databinding.LayoutTextBinding;
 import com.mjsoftking.tcpserviceapp.test.dispose.ServiceDataDispose;
 import com.mjsoftking.tcpserviceapp.test.event.TcpServiceReceiveDataEvent;
 import com.mjsoftking.tcpserviceapp.test.generate.ServiceDataGenerate;
+import com.osard.udplib.UdpLibConfig;
+import com.osard.udplib.UdpLibService;
+import com.osard.udplib.dispose.UdpDataBuilder;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -228,6 +232,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         //配置debug模式
         TcpLibConfig.getInstance()
                 .setDebugMode(BuildConfig.DEBUG);
+
+        //Udp服务设定debug模式，在debug下打印log日志
+        UdpLibConfig.getInstance()
+                .setDebugMode(BuildConfig.DEBUG)
+                .setReceiveBufferSize(1024 * 1024)
+                .setReceiveCacheBufferSize(12 * 1024)
+                //断开连接时，缓冲区内数据留存时间，单位：分钟
+                .setRetentionTime(0);
+
+        ///启动Udp服务
+        UdpLibService.getInstance().bindService(5000,
+                UdpDataBuilder.builder(null,
+                        null));
 
     }
 
