@@ -28,7 +28,11 @@ public class ByteQueueList {
     }
 
     public synchronized boolean add(int length, byte... c) {
-        System.arraycopy(c, 0, elementData, size, length);
+        return add(0, length, c);
+    }
+
+    public synchronized boolean add(int offset, int length, byte... c) {
+        System.arraycopy(c, offset, elementData, size, length);
         size += length;
         return length != 0;
     }

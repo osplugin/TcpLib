@@ -60,7 +60,8 @@ public class UdpLibService {
         }
         try {
             DatagramSocket socket = new DatagramSocket(null);
-            socket.setBroadcast(false);
+            socket.setReuseAddress(true);
+            socket.setBroadcast(true);
             socket.setSoTimeout(0);
             socket.setReceiveBufferSize(UdpLibConfig.getInstance().getReceiveBufferSize());
             socket.setSendBufferSize(UdpLibConfig.getInstance().getReceiveBufferSize());

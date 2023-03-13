@@ -23,7 +23,7 @@ public class ReceiveBean {
         while ((bufferQueue.size() + p.getLength()) >= bufferQueue.getMaxLength())
             ;
 
-        bufferQueue.add(p.getLength(), p.getData());
+        bufferQueue.add(p.getOffset(), p.getLength(), p.getData());
 
         if (null == dataDisposeThread || !dataDisposeThread.isAlive() || dataDisposeThread.isInterrupted()) {
             if (null != dataDisposeThread) {
