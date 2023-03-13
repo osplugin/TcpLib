@@ -76,7 +76,7 @@ public class UdpLibService {
             EventBus.getDefault().post(new UdpServiceBindSuccessEvent(port, "0.0.0.0:" + port));
 
             //服务关闭时，接收方法就会被关闭
-            new UdpDataReceiveThread(socket, builder, false).start();
+            new UdpDataReceiveThread(socket, builder).start();
         } catch (SocketException e) {
             if (UdpLibConfig.getInstance().isDebugMode()) {
                 Log.e(TAG, "服务开启失败", e);

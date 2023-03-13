@@ -16,9 +16,11 @@ public class ByteQueueList {
     transient byte[] elementData;
     int size;
 
+    int maxLength;
+
     public ByteQueueList() {
-        int length = Math.max((int) (UdpLibConfig.getInstance().getReceiveCacheBufferSize() * 1.5), 5 * 1024 * 1024);
-        this.elementData = new byte[length];
+        maxLength = Math.max((int) (UdpLibConfig.getInstance().getReceiveCacheBufferSize() * 2.5), 64 * 1024);
+        this.elementData = new byte[maxLength];
     }
 
     public synchronized boolean add(byte c) {
@@ -55,6 +57,10 @@ public class ByteQueueList {
 
     public int size() {
         return size;
+    }
+
+    public int getMaxLength() {
+        return maxLength;
     }
 
     public byte get(int index) {
