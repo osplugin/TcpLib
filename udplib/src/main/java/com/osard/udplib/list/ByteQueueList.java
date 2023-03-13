@@ -19,7 +19,7 @@ public class ByteQueueList {
     int maxLength;
 
     public ByteQueueList() {
-        maxLength = Math.max((int) (UdpLibConfig.getInstance().getReceiveCacheBufferSize() * 2.5), 64 * 1024);
+        maxLength = Math.max((int) (UdpLibConfig.getInstance().getReceiveCacheBufferSize() * 2.5), 512 * 1024);
         this.elementData = new byte[maxLength];
     }
 
