@@ -1,6 +1,8 @@
 package com.osard.udplib.thread;
 
 
+import android.net.wifi.WifiManager;
+
 import com.osard.udplib.UdpLibConfig;
 import com.osard.udplib.bean.ReceiveBean;
 import com.osard.udplib.dispose.UdpDataBuilder;
@@ -31,10 +33,15 @@ public class UdpDataReceiveThread extends Thread {
     private final int servicePort;
     private final Map<String, ReceiveBean> map = new ConcurrentHashMap<>();
 
+    private WifiManager.MulticastLock lock;
+
     public UdpDataReceiveThread(DatagramSocket serverSocket, UdpDataBuilder builder) {
         this.servicePort = serverSocket.getLocalPort();
         this.serverSocket = serverSocket;
         this.builder = builder;
+
+//        WifiManager manager = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+//        lock = manager.createMulticastLock(UUID.randomUUID().toString());
 
         setPriority(Thread.MAX_PRIORITY);
     }
@@ -45,7 +52,10 @@ public class UdpDataReceiveThread extends Thread {
             try {
                 byte[] buffer = new byte[UdpLibConfig.getInstance().getReceiveCacheBufferSize()];
                 DatagramPacket p = new DatagramPacket(buffer, buffer.length);
+
+//                lock.acquire();
                 serverSocket.receive(p);
+//                lock.release();
 
                 ReceiveBean receiveBean = map.get(p.getAddress().getHostAddress());
                 if (null == receiveBean) {
