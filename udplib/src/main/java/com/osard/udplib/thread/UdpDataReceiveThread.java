@@ -48,11 +48,11 @@ public class UdpDataReceiveThread extends Thread {
 
     @Override
     public void run() {
+        byte[] buffer = new byte[UdpLibConfig.getInstance().getReceiveCacheBufferSize()];
+        DatagramPacket p = new DatagramPacket(buffer, buffer.length);
+
         while (true) {
             try {
-                byte[] buffer = new byte[UdpLibConfig.getInstance().getReceiveCacheBufferSize()];
-                DatagramPacket p = new DatagramPacket(buffer, buffer.length);
-
 //                lock.acquire();
                 serverSocket.receive(p);
 //                lock.release();
