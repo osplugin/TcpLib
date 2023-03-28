@@ -122,8 +122,14 @@ public class UdpDataBuilder {
         return new UdpDataBuilder(getDataGenerate(), getDataDispose());
     }
 
-    public void serviceSendMessage(int port, String address, Object content) {
+    public void serviceSendMessage(String serviceAddress, String address, Object content) {
         sendMessageExecutorService.submit(() -> {
+            String[] s = serviceAddress.split(":");
+            if (s.length < 2) {
+                return;
+            }
+            int port = Integer.parseInt(s[1]);
+
             try {
                 sendMessage(address, content);
                 //发送消息发送成功事件

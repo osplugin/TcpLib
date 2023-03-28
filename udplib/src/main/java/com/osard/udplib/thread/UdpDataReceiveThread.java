@@ -1,11 +1,10 @@
 package com.osard.udplib.thread;
 
 
-import android.net.wifi.WifiManager;
-
 import com.osard.udplib.UdpLibConfig;
 import com.osard.udplib.bean.ReceiveBean;
 import com.osard.udplib.dispose.UdpDataBuilder;
+import com.osard.udplib.event.service.UdpClientDisconnectEvent;
 import com.osard.udplib.event.service.UdpServiceCloseEvent;
 
 import org.greenrobot.eventbus.EventBus;
@@ -26,19 +25,23 @@ import java.util.concurrent.ConcurrentHashMap;
 public class UdpDataReceiveThread extends Thread {
 
     private final static String TAG = UdpDataReceiveThread.class.getSimpleName();
-    private final static String IP_ADDRESS = "%s:%d";
+    public final static String IP_ADDRESS = "%s:%d";
 
     private final DatagramSocket serverSocket;
     private final UdpDataBuilder builder;
     private final int servicePort;
+    private final String serviceIp;
     private final Map<String, ReceiveBean> map = new ConcurrentHashMap<>();
+    private final boolean client;
+    private final Map<String, UdpDataBuilder> manageMap;
 
-    private WifiManager.MulticastLock lock;
-
-    public UdpDataReceiveThread(DatagramSocket serverSocket, UdpDataBuilder builder) {
-        this.servicePort = serverSocket.getLocalPort();
+    public UdpDataReceiveThread(String serviceIp, int servicePort, DatagramSocket serverSocket, UdpDataBuilder builder, Map<String, UdpDataBuilder> manageMap, boolean client) {
+        this.serviceIp = serviceIp;
+        this.servicePort = servicePort;
         this.serverSocket = serverSocket;
         this.builder = builder;
+        this.client = client;
+        this.manageMap = manageMap;
 
 //        WifiManager manager = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
 //        lock = manager.createMulticastLock(UUID.randomUUID().toString());
@@ -68,8 +71,18 @@ public class UdpDataReceiveThread extends Thread {
             } catch (IOException e) {
                 //主动调用一次，确保关闭
                 serverSocket.close();
-                //发送服务器监听关闭事件
-                EventBus.getDefault().post(new UdpServiceCloseEvent(this.servicePort, String.format(Locale.getDefault(), IP_ADDRESS, "0.0.0.0", servicePort)));
+
+                if (client) {
+                    //发送服务器监听关闭事件
+                    EventBus.getDefault().post(new UdpClientDisconnectEvent(this.servicePort,
+                            String.format(Locale.getDefault(), IP_ADDRESS, "0.0.0.0", servicePort)));
+                } else {
+                    //发送服务器监听关闭事件
+                    EventBus.getDefault().post(new UdpServiceCloseEvent(this.servicePort,
+                            String.format(Locale.getDefault(), IP_ADDRESS, "0.0.0.0", servicePort)));
+                }
+
+                manageMap.remove(String.format(Locale.getDefault(), IP_ADDRESS, serviceIp, servicePort));
                 break;
             }
         }

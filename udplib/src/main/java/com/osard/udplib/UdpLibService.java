@@ -15,6 +15,7 @@ import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -29,19 +30,19 @@ public class UdpLibService {
     private final static String TAG = UdpLibService.class.getSimpleName();
 
     private static UdpLibService UDP_SERVICE;
-    /**
-     * 对绑定端口的服务端进行缓存
-     */
-    private final Map<Integer, DatagramSocket> serverSocketMap;
-    private UdpDataBuilder udpDataBuilder;
 //    /**
-//     * 对绑定端口的服务端的连接客户端进行缓存
+//     * 对绑定端口的服务端进行缓存
 //     */
-//    private final Map<Integer, Map<String, UdpDataBuilder>> portMap;
+//    private final Map<Integer, DatagramSocket> serverSocketMap;
+//    private UdpDataBuilder udpDataBuilder;
+    /**
+     * 对绑定端口的服务端的连接客户端进行缓存
+     */
+    private final Map<String, UdpDataBuilder> serviceMap;
 
     UdpLibService() {
-//        portMap = new ConcurrentHashMap<>();
-        serverSocketMap = new ConcurrentHashMap<>();
+        serviceMap = new ConcurrentHashMap<>();
+//        serverSocketMap = new ConcurrentHashMap<>();
     }
 
     public static synchronized UdpLibService getInstance() {
@@ -52,7 +53,7 @@ public class UdpLibService {
     }
 
     public synchronized void bindService(int port, UdpDataBuilder builder) {
-        if (null != serverSocketMap.get(port)) {
+        if (null != serviceMap.get(addressAllName(port))) {
             if (UdpLibConfig.getInstance().isDebugMode()) {
                 Log.w(TAG, "UDP服务在端口: " + port + "下已经启动，请勿多次启动");
             }
@@ -67,23 +68,22 @@ public class UdpLibService {
             socket.setSendBufferSize(UdpLibConfig.getInstance().getReceiveBufferSize());
             socket.bind(new InetSocketAddress("0.0.0.0", port));
 
+//            serverSocketMap.put(port, socket);
+//            udpDataBuilder = builder;
             //线程安全的map
-//            portMap.put(port, new ConcurrentHashMap<>());
-            serverSocketMap.put(port, socket);
-            builder.setSocket(socket);
-            udpDataBuilder = builder;
+            serviceMap.put(addressAllName(port), builder.setSocket(socket));
 
             //发送服务器已监听事件
-            EventBus.getDefault().post(new UdpServiceBindSuccessEvent(port, "0.0.0.0:" + port));
+            EventBus.getDefault().post(new UdpServiceBindSuccessEvent(port, addressAllName(port)));
 
             //服务关闭时，接收方法就会被关闭
-            new UdpDataReceiveThread(socket, builder).start();
+            new UdpDataReceiveThread("0.0.0.0", port, socket, builder, serviceMap, false).start();
         } catch (SocketException e) {
             if (UdpLibConfig.getInstance().isDebugMode()) {
                 Log.e(TAG, "服务开启失败", e);
             }
             //发送服务器监听失败事件
-            EventBus.getDefault().post(new UdpServiceBindFailEvent(port, "0.0.0.0:" + port));
+            EventBus.getDefault().post(new UdpServiceBindFailEvent(port, addressAllName(port)));
         }
     }
 
@@ -91,23 +91,18 @@ public class UdpLibService {
      * 关闭服务监听
      */
     public synchronized void close(int port) {
-        DatagramSocket serverSocket = serverSocketMap.get(port);
-        if (null != serverSocket) {
-            serverSocket.close();
-        }
-//        Map<String, UdpDataBuilder> map = portMap.get(port);
-//        if (null != map) {
-//            for (String address : map.keySet()) {
-//                UdpDataBuilder builder = map.get(address);
-//                if (builder != null && null != builder.getSocket()) {
-//                    builder.getSocket().close();
-//                }
-//                map.remove(address);
-//            }
-//        }
+        close(addressAllName(port));
+    }
 
-        serverSocketMap.remove(port);
-//        portMap.remove(port);
+    /**
+     * 关闭服务监听
+     */
+    public synchronized void close(String address) {
+        UdpDataBuilder udpDataBuilder = serviceMap.get(address);
+        if (null != udpDataBuilder && null != udpDataBuilder.getSocket()) {
+            udpDataBuilder.getSocket().close();
+        }
+        serviceMap.remove(address);
     }
 
     /**
@@ -116,7 +111,7 @@ public class UdpLibService {
      * 如果运行了多个服务器时，则操作端口号最小的服务器
      */
     public synchronized void close() {
-        Integer port = onlyRunServicePort();
+        String port = onlyRunServicePort();
         if (null == port) {
             if (UdpLibConfig.getInstance().isDebugMode()) {
                 Log.w(TAG, "当前没有正在运行的服务器");
@@ -131,7 +126,7 @@ public class UdpLibService {
      * 关闭所有端口服务监听
      */
     public synchronized void closeAll() {
-        for (Integer port : serverSocketMap.keySet()) {
+        for (String port : serviceMap.keySet()) {
             close(port);
         }
     }
@@ -142,11 +137,20 @@ public class UdpLibService {
      * @param port 指定端口服务器
      */
     public boolean isRun(int port) {
-        DatagramSocket serverSocket = serverSocketMap.get(port);
-        if (null == serverSocket) {
+        return isRun(addressAllName(port));
+    }
+
+    /**
+     * 获取指定端口服务器是否在运行
+     *
+     * @param address 指定服务器
+     */
+    public boolean isRun(String address) {
+        UdpDataBuilder udpDataBuilder = serviceMap.get(address);
+        if (null == udpDataBuilder || null == udpDataBuilder.getSocket()) {
             return false;
         }
-        return !serverSocket.isClosed();
+        return !udpDataBuilder.getSocket().isClosed();
     }
 
 //    /**
@@ -275,33 +279,33 @@ public class UdpLibService {
     /**
      * 向指定的客户端按照指定数据格式发送数据
      *
-     * @param port    指定服务器端口号，使用此端口启动的服务发起数据发送
+     * @param port    指定服务器端
      * @param address 在线客户端地址带端口号
      * @param content 需要发送的原始数据
      */
     public void sendMessage(int port, String address, Object content) {
-        if (!isRun(port)) {
+        sendMessage(addressAllName(port), address, content);
+    }
+
+    /**
+     * 向指定的客户端按照指定数据格式发送数据
+     *
+     * @param serviceAddress 指定服务器端
+     * @param address        在线客户端地址带端口号
+     * @param content        需要发送的原始数据
+     */
+    public void sendMessage(String serviceAddress, String address, Object content) {
+        if (!isRun(serviceAddress)) {
             if (UdpLibConfig.getInstance().isDebugMode()) {
-                Log.w(TAG, "服务端端口: " + port + ", 服务端未启动");
+                Log.w(TAG, "服务端端口: " + serviceAddress + ", 服务端未启动");
             }
             return;
         }
-//        Map<String, UdpDataBuilder> map = portMap.get(port);
-//        if (null == map || map.isEmpty()) {
-//            if (UdpLibConfig.getInstance().isDebugMode()) {
-//                Log.w(TAG, "服务端端口: " + port + ", 服务端没有客户端连接");
-//            }
-//            return;
-//        }
-//        UdpDataBuilder disposeBuilder = map.get(address);
-//        if (null == disposeBuilder) {
-//            if (UdpLibConfig.getInstance().isDebugMode()) {
-//                Log.w(TAG, "服务端端口: " + port + ", " +
-//                        "客户端: " + address + ", 指定客户端未连接服务器");
-//            }
-//            return;
-//        }
-        udpDataBuilder.serviceSendMessage(port, address, content);
+        UdpDataBuilder udpDataBuilder = serviceMap.get(serviceAddress);
+        if (null == udpDataBuilder || null == udpDataBuilder.getSocket()) {
+            return;
+        }
+        udpDataBuilder.serviceSendMessage(serviceAddress, address, content);
     }
 
     /**
@@ -313,15 +317,15 @@ public class UdpLibService {
      * @param content 需要发送的原始数据
      */
     public void sendMessage(String address, Object content) {
-        Integer port = onlyRunServicePort();
-        if (null == port) {
+        String serviceAddress = onlyRunServicePort();
+        if (null == serviceAddress) {
             if (UdpLibConfig.getInstance().isDebugMode()) {
                 Log.w(TAG, "当前没有正在运行的服务器");
             }
             return;
         }
 
-        sendMessage(port, address, content);
+        sendMessage(serviceAddress, address, content);
     }
 
 //    /**
@@ -371,10 +375,14 @@ public class UdpLibService {
     /**
      * 如果运行的服务器数量大于0，则返回端口号正序排列后的第一个，反之返回null
      */
-    private Integer onlyRunServicePort() {
-        List<Integer> s = new ArrayList<>(serverSocketMap.keySet());
+    private String onlyRunServicePort() {
+        List<String> s = new ArrayList<>(serviceMap.keySet());
         Collections.sort(s);
         return s.size() > 0 ? s.get(0) : null;
+    }
+
+    private String addressAllName(int port) {
+        return String.format(Locale.getDefault(), UdpDataReceiveThread.IP_ADDRESS, "0.0.0.0", port);
     }
 
 }
