@@ -4,7 +4,7 @@ package com.osard.udplib.thread;
 import com.osard.udplib.UdpLibConfig;
 import com.osard.udplib.bean.ReceiveBean;
 import com.osard.udplib.dispose.UdpDataBuilder;
-import com.osard.udplib.event.service.UdpClientDisconnectEvent;
+import com.osard.udplib.event.client.UdpServiceDisconnectEvent;
 import com.osard.udplib.event.service.UdpServiceCloseEvent;
 
 import org.greenrobot.eventbus.EventBus;
@@ -74,7 +74,7 @@ public class UdpDataReceiveThread extends Thread {
 
                 if (client) {
                     //发送服务器监听关闭事件
-                    EventBus.getDefault().post(new UdpClientDisconnectEvent(this.servicePort,
+                    EventBus.getDefault().post(new UdpServiceDisconnectEvent(this.servicePort,
                             String.format(Locale.getDefault(), IP_ADDRESS, "0.0.0.0", servicePort)));
                 } else {
                     //发送服务器监听关闭事件
