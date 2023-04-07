@@ -4,7 +4,6 @@ import android.util.Log;
 
 import com.osard.udplib.UdpLibConfig;
 import com.osard.udplib.event.client.UdpClientSendMessageEvent;
-import com.osard.udplib.event.service.UdpServiceSendMessageEvent;
 
 import org.greenrobot.eventbus.EventBus;
 
@@ -133,7 +132,7 @@ public class UdpDataBuilder {
             try {
                 sendMessage(address, content);
                 //发送消息发送成功事件
-                EventBus.getDefault().post(new UdpServiceSendMessageEvent(port, address, content));
+//                EventBus.getDefault().post(new UdpServiceSendMessageEvent(port, address, content));
             } catch (IOException e) {
                 if (UdpLibConfig.getInstance().isDebugMode()) {
                     Log.e(TAG, "服务端端口: " + port + ", " +
