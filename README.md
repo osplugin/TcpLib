@@ -62,7 +62,12 @@ dependencyResolutionManagement {
 ```
 dependencies {
     ...
-    implementation 'com.gitee.osard:TcpLib:+'
+    //TCP工具
+    implementation 'com.gitee.osard.TcpLib:TcpLib:1.2.0'
+    //UDP工具
+    implementation 'com.gitee.osard.TcpLib:UdpLib:1.2.0'
+    
+    //核心消息通讯
     implementation 'org.greenrobot:eventbus:3.3.1'
 }
 ```
