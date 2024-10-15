@@ -10,6 +10,7 @@ import org.greenrobot.eventbus.EventBus;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.lang.reflect.Constructor;
 import java.net.Socket;
 import java.nio.charset.Charset;
 import java.util.Arrays;
@@ -27,10 +28,15 @@ import java.util.concurrent.Executors;
 public class TcpDataBuilder {
 
     private final static String TAG = TcpDataBuilder.class.getSimpleName();
+
     //接收数据报文的处理接口
+    private final Class<? extends TcpBaseDataDispose> dataDisposeClass;
     private final TcpBaseDataDispose dataDispose;
+
     //发送数据报文的生成接口
+    private final Class<? extends TcpBaseDataGenerate> dataGenerateClass;
     private final TcpBaseDataGenerate dataGenerate;
+
     //单例线程池
     private final ExecutorService sendMessageExecutorService;
     /**
@@ -41,9 +47,15 @@ public class TcpDataBuilder {
      */
     private Socket socket;
 
-    TcpDataBuilder(TcpBaseDataGenerate dataGenerate, TcpBaseDataDispose dataDispose) {
-        if (null == dataDispose) {
-            dataDispose = (bufferQueue, servicePort, address) -> {
+    TcpDataBuilder(Class<? extends TcpBaseDataGenerate> dataGenerateClass, Class<? extends TcpBaseDataDispose> dataDisposeClass) {
+        this.dataGenerateClass = dataGenerateClass;
+        this.dataDisposeClass = dataDisposeClass;
+
+        TcpBaseDataDispose dataDispose1 = instantiateDisposeClass(dataDisposeClass);
+        TcpBaseDataGenerate dataGenerate1 = instantiateGenerateClass(dataGenerateClass);
+
+        if (null == dataDispose1) {
+            dataDispose1 = (bufferQueue, servicePort, address) -> {
                 Log.w(TAG, "未实现数据解析器，使用默认规则");
                 byte[] b = new byte[bufferQueue.size()];
                 for (int i = 0; i < b.length; ++i) {
@@ -54,26 +66,43 @@ public class TcpDataBuilder {
             };
         }
 
-        if (null == dataGenerate) {
-            dataGenerate = new TcpBaseDataGenerate() {
-                @Override
-                public byte[] generate(Object content) {
-                    Log.w(TAG, "未实现数据生成器，使用默认规则");
-                    if (content instanceof byte[]) {
-                        return (byte[]) content;
-                    } else if (content instanceof String) {
-                        return ((String) content).getBytes(Charset.forName("UTF-8"));
-                    } else {
-                        return content.toString().getBytes(Charset.forName("UTF-8"));
-                    }
+        if (null == dataGenerate1) {
+            dataGenerate1 = content -> {
+                Log.w(TAG, "未实现数据生成器，使用默认规则");
+                if (content instanceof byte[]) {
+                    return (byte[]) content;
+                } else if (content instanceof String) {
+                    return ((String) content).getBytes(Charset.forName("UTF-8"));
+                } else {
+                    return content.toString().getBytes(Charset.forName("UTF-8"));
                 }
             };
         }
 
-        this.dataGenerate = dataGenerate;
-        this.dataDispose = dataDispose;
+        this.dataGenerate = dataGenerate1;
+        this.dataDispose = dataDispose1;
 
         this.sendMessageExecutorService = Executors.newSingleThreadExecutor();
+    }
+
+    public TcpBaseDataGenerate instantiateGenerateClass(Class<? extends TcpBaseDataGenerate> clazz) {
+        try {
+            Constructor<? extends TcpBaseDataGenerate> constructor = clazz.getDeclaredConstructor();
+            return constructor.newInstance();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public TcpBaseDataDispose instantiateDisposeClass(Class<? extends TcpBaseDataDispose> clazz) {
+        try {
+            Constructor<? extends TcpBaseDataDispose> constructor = clazz.getDeclaredConstructor();
+            return constructor.newInstance();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     /**
@@ -82,7 +111,7 @@ public class TcpDataBuilder {
      * @param dataGenerate 数据报文生成器
      * @param dataDispose  数据报文处理器
      */
-    public static TcpDataBuilder builder(TcpBaseDataGenerate dataGenerate, TcpBaseDataDispose dataDispose) {
+    public static TcpDataBuilder builder(Class<? extends TcpBaseDataGenerate> dataGenerate, Class<? extends TcpBaseDataDispose> dataDispose) {
         return new TcpDataBuilder(dataGenerate, dataDispose);
     }
 
@@ -112,7 +141,7 @@ public class TcpDataBuilder {
      * 复制处理规则，返回新对象
      */
     public TcpDataBuilder copy() {
-        return new TcpDataBuilder(getDataGenerate(), getDataDispose());
+        return new TcpDataBuilder(dataGenerateClass, dataDisposeClass);
     }
 
     public void serviceSendMessage(int port, String address, Object content) {

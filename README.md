@@ -7,6 +7,8 @@
 安卓 Java tcp提炼封装工具, 目前已支持一台手机建立多个端口监听服务器且使用各自的报文处理规则，一个手机对多个端口服务器进行连接且使用各自的报文处理规则。
 
 ### 更新
+#### V1.3.0 （2024-10-15）
+- 修改TCP、UD处理器，传递class类型，而不是对象实例。
 
 #### V1.2.1 （2024-10-09）
 - 移除了TCP工具包中的意外日志打印。
@@ -67,9 +69,9 @@ dependencyResolutionManagement {
 dependencies {
     ...
     //TCP工具
-    implementation 'com.gitee.osard.TcpLib:TcpLib:1.2.0'
+    implementation 'com.gitee.osard.TcpLib:TcpLib:1.3.0'
     //UDP工具
-    implementation 'com.gitee.osard.TcpLib:UdpLib:1.2.0'
+    implementation 'com.gitee.osard.TcpLib:UdpLib:1.3.0'
     
     //核心消息通讯
     implementation 'org.greenrobot:eventbus:3.3.1'
@@ -131,7 +133,7 @@ public class DataGenerate implements TcpBaseDataGenerate {
 ```
 int port = 50000;
 TcpLibService.getInstance()
-                .bindService(port, TcpDataBuilder.builder(new DataGenerate(), new DataDispose()));
+                .bindService(port, TcpDataBuilder.builder(DataGenerate.class, DataDispose.class));
 ```
 
  **- 服务端关闭，关闭时需提供启动的端口号** 
@@ -240,7 +242,7 @@ Sting address = "127.0.0.1";
 int port = 50000;
 TcpLibClient.getInstance()
                    .connect(address, port ),
-                            TcpDataBuilder.builder(new ClientDataGenerate(), new ClientDataDispose()));
+                            TcpDataBuilder.builder(ClientDataGenerate.class, ClientDataDispose.class));
 ```
 
  **- 客户端关闭，关闭时需提供IP和端口号** 

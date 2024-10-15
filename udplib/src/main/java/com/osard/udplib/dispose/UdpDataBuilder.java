@@ -8,6 +8,7 @@ import com.osard.udplib.event.client.UdpClientSendMessageEvent;
 import org.greenrobot.eventbus.EventBus;
 
 import java.io.IOException;
+import java.lang.reflect.Constructor;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.Inet4Address;
@@ -27,10 +28,15 @@ import java.util.concurrent.Executors;
 public class UdpDataBuilder {
 
     private final static String TAG = UdpDataBuilder.class.getSimpleName();
+
     //接收数据报文的处理接口
+    private final Class<? extends UdpBaseDataDispose> dataDisposeClass;
     private final UdpBaseDataDispose dataDispose;
+
     //发送数据报文的生成接口
+    private final Class<? extends UdpBaseDataGenerate> dataGenerateClass;
     private final UdpBaseDataGenerate dataGenerate;
+
     //单例线程池
     private final ExecutorService sendMessageExecutorService;
     /**
@@ -41,9 +47,15 @@ public class UdpDataBuilder {
      */
     private DatagramSocket socket;
 
-    UdpDataBuilder(UdpBaseDataGenerate dataGenerate, UdpBaseDataDispose dataDispose) {
-        if (null == dataDispose) {
-            dataDispose = (bufferQueue, servicePort, address) -> {
+    UdpDataBuilder(Class<? extends UdpBaseDataGenerate> dataGenerateClass, Class<? extends UdpBaseDataDispose> dataDisposeClass) {
+        this.dataGenerateClass = dataGenerateClass;
+        this.dataDisposeClass = dataDisposeClass;
+
+        UdpBaseDataDispose dataDispose1 = instantiateDisposeClass(dataDisposeClass);
+        UdpBaseDataGenerate dataGenerate1 = instantiateGenerateClass(dataGenerateClass);
+
+        if (null == dataDispose1) {
+            dataDispose1 = (bufferQueue, servicePort, address) -> {
                 Log.w(TAG, "未实现数据解析器，使用默认规则");
                 byte[] b = new byte[bufferQueue.size()];
                 for (int i = 0; i < b.length; ++i) {
@@ -60,8 +72,8 @@ public class UdpDataBuilder {
             };
         }
 
-        if (null == dataGenerate) {
-            dataGenerate = new UdpBaseDataGenerate() {
+        if (null == dataGenerate1) {
+            dataGenerate1 = new UdpBaseDataGenerate() {
                 @Override
                 public byte[] generate(Object content) {
                     Log.w(TAG, "未实现数据生成器，使用默认规则");
@@ -76,10 +88,31 @@ public class UdpDataBuilder {
             };
         }
 
-        this.dataGenerate = dataGenerate;
-        this.dataDispose = dataDispose;
+        this.dataGenerate = dataGenerate1;
+        this.dataDispose = dataDispose1;
 
         this.sendMessageExecutorService = Executors.newSingleThreadExecutor();
+    }
+
+
+    public UdpBaseDataGenerate instantiateGenerateClass(Class<? extends UdpBaseDataGenerate> clazz) {
+        try {
+            Constructor<? extends UdpBaseDataGenerate> constructor = clazz.getDeclaredConstructor();
+            return constructor.newInstance();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public UdpBaseDataDispose instantiateDisposeClass(Class<? extends UdpBaseDataDispose> clazz) {
+        try {
+            Constructor<? extends UdpBaseDataDispose> constructor = clazz.getDeclaredConstructor();
+            return constructor.newInstance();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     /**
@@ -88,7 +121,7 @@ public class UdpDataBuilder {
      * @param dataGenerate 数据报文生成器
      * @param dataDispose  数据报文处理器
      */
-    public static UdpDataBuilder builder(UdpBaseDataGenerate dataGenerate, UdpBaseDataDispose dataDispose) {
+    public static UdpDataBuilder builder(Class<? extends UdpBaseDataGenerate> dataGenerate, Class<? extends UdpBaseDataDispose> dataDispose) {
         return new UdpDataBuilder(dataGenerate, dataDispose);
     }
 
@@ -118,7 +151,7 @@ public class UdpDataBuilder {
      * 复制处理规则，返回新对象
      */
     public UdpDataBuilder copy() {
-        return new UdpDataBuilder(getDataGenerate(), getDataDispose());
+        return new UdpDataBuilder(dataGenerateClass, dataDisposeClass);
     }
 
     public void serviceSendMessage(String serviceAddress, String address, Object content) {

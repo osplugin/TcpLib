@@ -286,8 +286,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             TcpLibService.getInstance()
                     .bindService(Integer.parseInt(binding.getEtPort()),
-                            TcpDataBuilder.builder(new ServiceDataGenerate(),
-                                    new ServiceDataDispose()));
+                            TcpDataBuilder.builder(ServiceDataGenerate.class,
+                                    ServiceDataDispose.class));
         }
         //
         else if (v.equals(binding.close)) {

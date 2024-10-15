@@ -75,7 +75,7 @@ public class TcpDataReceiveThread extends Thread {
                 ///限制缓存区不可超出此大小，一旦超出需要等待处理线程处理缓存区
                 while (bufferQueue.size() + bufferLength >= TcpLibConfig.getInstance().getReceiveCacheBufferSize())
                     ;
-                time = System.currentTimeMillis();
+//                Log.e("TCP", "读取缓存区数据, 时间：" + (System.currentTimeMillis()) + "，数据大小：" + bufferLength);
 //
                 bufferQueue.add(bufferLength, buffer);
 
