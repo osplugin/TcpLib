@@ -98,6 +98,7 @@ public class UdpDataBuilder {
     public UdpBaseDataGenerate instantiateGenerateClass(Class<? extends UdpBaseDataGenerate> clazz) {
         try {
             Constructor<? extends UdpBaseDataGenerate> constructor = clazz.getDeclaredConstructor();
+            constructor.setAccessible(true);
             return constructor.newInstance();
         } catch (Exception e) {
             e.printStackTrace();
@@ -108,6 +109,7 @@ public class UdpDataBuilder {
     public UdpBaseDataDispose instantiateDisposeClass(Class<? extends UdpBaseDataDispose> clazz) {
         try {
             Constructor<? extends UdpBaseDataDispose> constructor = clazz.getDeclaredConstructor();
+            constructor.setAccessible(true);
             return constructor.newInstance();
         } catch (Exception e) {
             e.printStackTrace();

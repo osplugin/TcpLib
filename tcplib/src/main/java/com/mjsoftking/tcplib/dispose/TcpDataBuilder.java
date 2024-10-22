@@ -88,6 +88,7 @@ public class TcpDataBuilder {
     public TcpBaseDataGenerate instantiateGenerateClass(Class<? extends TcpBaseDataGenerate> clazz) {
         try {
             Constructor<? extends TcpBaseDataGenerate> constructor = clazz.getDeclaredConstructor();
+            constructor.setAccessible(true);
             return constructor.newInstance();
         } catch (Exception e) {
             e.printStackTrace();
@@ -98,6 +99,7 @@ public class TcpDataBuilder {
     public TcpBaseDataDispose instantiateDisposeClass(Class<? extends TcpBaseDataDispose> clazz) {
         try {
             Constructor<? extends TcpBaseDataDispose> constructor = clazz.getDeclaredConstructor();
+            constructor.setAccessible(true);
             return constructor.newInstance();
         } catch (Exception e) {
             e.printStackTrace();

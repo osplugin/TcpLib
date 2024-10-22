@@ -19,6 +19,7 @@ import com.mjsoftking.tcpclient.test.Datagram;
 import com.mjsoftking.tcpclient.test.dispose.ClientDataDispose;
 import com.mjsoftking.tcpclient.test.event.TcpClientReceiveDataEvent;
 import com.mjsoftking.tcpclient.test.generate.ClientDataGenerate;
+import com.mjsoftking.tcplib.BuildConfig;
 import com.mjsoftking.tcplib.TcpLibClient;
 import com.mjsoftking.tcplib.TcpLibConfig;
 import com.mjsoftking.tcplib.dispose.TcpDataBuilder;
@@ -145,7 +146,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             //发起连接
             TcpLibClient.getInstance()
                     .connect(binding.getEtIp(), Integer.parseInt(binding.getEtPort()),
-                            TcpDataBuilder.builder(new ClientDataGenerate(), new ClientDataDispose()));
+                            TcpDataBuilder.builder(ClientDataGenerate.class, ClientDataDispose.class));
         }
         //
         else if (v.equals(binding.disconnect)) {
