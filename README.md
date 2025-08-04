@@ -1,31 +1,10 @@
 # TcpLibApp
 [![License](https://img.shields.io/badge/License%20-Apache%202-337ab7.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 [![API](https://img.shields.io/badge/API-16%2B-brightgreen.svg?style=flat)](https://android-arsenal.com/api?level=16)
-[![](https://jitpack.io/v/com.gitee.osard/TcpLib.svg)](https://jitpack.io/#com.gitee.osard/TcpLib)
+[![](https://jitpack.io/v/com.github.osplugin/TcpLib.svg)](https://jitpack.io/#com.github.osplugin/TcpLib)
 
 ### 介绍
 安卓 Java tcp提炼封装工具, 目前已支持一台手机建立多个端口监听服务器且使用各自的报文处理规则，一个手机对多个端口服务器进行连接且使用各自的报文处理规则。
-
-### 更新
-#### V1.3.0 （2024-10-15）
-- 修改TCP、UD处理器，传递class类型，而不是对象实例。
-
-#### V1.2.1 （2024-10-09）
-- 移除了TCP工具包中的意外日志打印。
-
-#### V1.2.0 （2023-09-27）
-- 优化为自定义缓存区，提高缓存区解析速率的同时避免发生集合修改异常；
-- 配置中增加缓存区上限大小设置，不建议设置过大，大小控制在64KB-128kb即可，注意缓存区解析速度不要低于传输速度避免导致缓存区超出后不在接收；
-- 增加一组UDP工具。
-
-#### V1.1.5 （2022-12-05）
-- 增加缓存区方法“removeFrameToHeader(byte[] header)”移除缓存区与给定头匹配的字节前所有字节，将匹配头置于缓存区首位；
-- 修改缓存区继承至“ArrayList”，提高缓存区解析速率；
-- 修改客户端和服务器工具类发送数据方式，避免发送数据顺序错乱问题。
-
-#### V1.1.1 （2022-02-17）
-- 缓冲区列表对象增加写操作时的线程锁，避免出现集合修改错误。
-- 缓冲区为避免方法函数错用，以将常规方法函数进行删除标记。
 
 ### 一、项目介绍
 
@@ -69,9 +48,9 @@ dependencyResolutionManagement {
 dependencies {
     ...
     //TCP工具
-    implementation 'com.gitee.osard.TcpLib:TcpLib:1.3.0'
+    implementation 'com.github.osplugin.TcpLib:TcpLib:1.3.0'
     //UDP工具
-    implementation 'com.gitee.osard.TcpLib:UdpLib:1.3.0'
+    implementation 'com.github.osplugin.TcpLib:UdpLib:1.3.0'
     
     //核心消息通讯
     implementation 'org.greenrobot:eventbus:3.3.1'
