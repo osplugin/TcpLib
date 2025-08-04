@@ -84,7 +84,7 @@ jobs:
 
           # Fixed 6 attempts with 10-second intervals
           ATTEMPTS=6
-          RETRY_INTERVAL=60
+          RETRY_INTERVAL=30
 
           for ((ATTEMPT=1; ATTEMPT<=ATTEMPTS; ATTEMPT++)); do
             echo "Making API call $ATTEMPT of $ATTEMPTS"
