@@ -48,9 +48,9 @@ dependencyResolutionManagement {
 dependencies {
     ...
     //TCP工具
-    implementation 'com.github.osplugin.TcpLib:TcpLib:1.3.0'
+    implementation 'com.github.osplugin.TcpLib:TcpLib:+'
     //UDP工具
-    implementation 'com.github.osplugin.TcpLib:UdpLib:1.3.0'
+    implementation 'com.github.osplugin.TcpLib:UdpLib:+'
     
     //核心消息通讯
     implementation 'org.greenrobot:eventbus:3.3.1'

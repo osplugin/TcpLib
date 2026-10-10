@@ -47,6 +47,13 @@ public class UdpDataBuilder {
      */
     private DatagramSocket socket;
 
+    /**
+     * 发送锁
+     * <p>
+     * 队列发送与同步发送可能来自不同线程，加锁保证每次发送的整包数据不会被拆散或者相互交错
+     */
+    private final Object sendLock = new Object();
+
     UdpDataBuilder(Class<? extends UdpBaseDataGenerate> dataGenerateClass, Class<? extends UdpBaseDataDispose> dataDisposeClass) {
         this.dataGenerateClass = dataGenerateClass;
         this.dataDisposeClass = dataDisposeClass;
@@ -177,6 +184,34 @@ public class UdpDataBuilder {
         });
     }
 
+    /**
+     * 同步发送数据（服务端向指定客户端发送）
+     * <p>
+     * 此方法会阻塞当前线程直到数据发送结束，请在子线程中调用
+     *
+     * @return true:发送成功；false:发送失败
+     */
+    public boolean serviceSendMessageSync(String serviceAddress, String address, Object content) {
+        String[] s = serviceAddress.split(":");
+        if (s.length < 2) {
+            return false;
+        }
+        int port = Integer.parseInt(s[1]);
+
+        try {
+            sendMessage(address, content);
+            //发送消息发送成功事件
+//                EventBus.getDefault().post(new UdpServiceSendMessageEvent(port, address, content));
+            return true;
+        } catch (IOException e) {
+            if (UdpLibConfig.getInstance().isDebugMode()) {
+                Log.e(TAG, "服务端端口: " + port + ", " +
+                        "客户端: " + address + ", 向指定客户端同步发送消息异常", e);
+            }
+            return false;
+        }
+    }
+
     public void clientSendMessage(String address, Object content) {
         sendMessageExecutorService.submit(() -> {
             try {
@@ -191,15 +226,47 @@ public class UdpDataBuilder {
         });
     }
 
+    /**
+     * 同步发送数据（客户端向指定服务端发送）
+     * <p>
+     * 此方法会阻塞当前线程直到数据发送结束，请在子线程中调用
+     *
+     * @return true:发送成功；false:发送失败
+     */
+    public boolean clientSendMessageSync(String address, Object content) {
+        try {
+            sendMessage(address, content);
+            //发送消息发送成功事件
+            EventBus.getDefault().post(new UdpClientSendMessageEvent(address, content));
+            return true;
+        } catch (IOException e) {
+            if (UdpLibConfig.getInstance().isDebugMode()) {
+                Log.e(TAG, "服务端端口: " + address + ", 向指定服务端同步发送消息异常", e);
+            }
+            return false;
+        }
+    }
+
+    /**
+     * 将一次数据报文的完整字节写入隧道
+     * <p>
+     * 队列发送和同步发送共用此方法，加锁保证整包数据不会被拆散或者相互交错
+     */
     private void sendMessage(String address, Object content) throws IOException {
+        if (null == socket) {
+            throw new IOException("socket 未连接");
+        }
         String[] s = address.split(":");
         if (s.length < 2) {
-            return;
+            throw new IOException("地址格式错误: " + address);
         }
+        //先完成数据生成，再占用发送锁，减少锁占用时间
         byte[] buffer = dataGenerate.generate(content);
         DatagramPacket datagramPacket = new DatagramPacket(buffer, buffer.length,
                 Inet4Address.getByName(s[0]), Integer.parseInt(s[1]));
-        socket.send(datagramPacket);
+        synchronized (sendLock) {
+            socket.send(datagramPacket);
+        }
     }
 
 

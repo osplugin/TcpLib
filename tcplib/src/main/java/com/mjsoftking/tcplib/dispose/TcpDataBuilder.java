@@ -47,6 +47,13 @@ public class TcpDataBuilder {
      */
     private Socket socket;
 
+    /**
+     * 发送锁
+     * <p>
+     * 队列发送与同步发送可能来自不同线程，加锁保证每次发送的整包数据不会被拆散或者相互交错
+     */
+    private final Object sendLock = new Object();
+
     TcpDataBuilder(Class<? extends TcpBaseDataGenerate> dataGenerateClass, Class<? extends TcpBaseDataDispose> dataDisposeClass) {
         this.dataGenerateClass = dataGenerateClass;
         this.dataDisposeClass = dataDisposeClass;
@@ -161,6 +168,28 @@ public class TcpDataBuilder {
         });
     }
 
+    /**
+     * 同步发送数据（服务端向指定客户端发送）
+     * <p>
+     * 此方法会阻塞当前线程直到数据发送结束，请在子线程中调用
+     *
+     * @return true:发送成功；false:发送失败
+     */
+    public boolean serviceSendMessageSync(int port, String address, Object content) {
+        try {
+            sendMessage(content);
+            //发送消息发送成功事件
+            EventBus.getDefault().post(new TcpServiceSendMessageEvent(port, address, content));
+            return true;
+        } catch (IOException e) {
+            if (TcpLibConfig.getInstance().isDebugMode()) {
+                Log.e(TAG, "服务端端口: " + port + ", " +
+                        "客户端: " + address + ", 向指定客户端同步发送消息异常", e);
+            }
+            return false;
+        }
+    }
+
     public void clientSendMessage(String address, Object content) {
         sendMessageExecutorService.submit(() -> {
             try {
@@ -175,10 +204,43 @@ public class TcpDataBuilder {
         });
     }
 
+    /**
+     * 同步发送数据（客户端向指定服务端发送）
+     * <p>
+     * 此方法会阻塞当前线程直到数据发送结束，请在子线程中调用
+     *
+     * @return true:发送成功；false:发送失败
+     */
+    public boolean clientSendMessageSync(String address, Object content) {
+        try {
+            sendMessage(content);
+            //发送消息发送成功事件
+            EventBus.getDefault().post(new TcpClientSendMessageEvent(address, content));
+            return true;
+        } catch (IOException e) {
+            if (TcpLibConfig.getInstance().isDebugMode()) {
+                Log.e(TAG, "服务端端口: " + address + ", 向指定服务端同步发送消息异常", e);
+            }
+            return false;
+        }
+    }
+
+    /**
+     * 将一次数据报文的完整字节写入隧道
+     * <p>
+     * 队列发送和同步发送共用此方法，加锁保证整包数据不会被拆散或者相互交错
+     */
     private void sendMessage(Object content) throws IOException {
-        OutputStream outputStream = socket.getOutputStream();
-        outputStream.write(dataGenerate.generate(content));
-        outputStream.flush();
+        if (null == socket) {
+            throw new IOException("socket 未连接");
+        }
+        //先完成数据生成，再占用发送锁，减少锁占用时间
+        byte[] data = dataGenerate.generate(content);
+        synchronized (sendLock) {
+            OutputStream outputStream = socket.getOutputStream();
+            outputStream.write(data);
+            outputStream.flush();
+        }
     }
 
 

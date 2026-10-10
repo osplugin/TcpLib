@@ -331,6 +331,64 @@ public class TcpLibService {
     }
 
     /**
+     * 向指定的客户端按照指定数据格式同步发送数据
+     * <p>
+     * 此方法会阻塞当前线程直到数据发送结束，请在子线程中调用
+     *
+     * @param port    指定服务器端口号，使用此端口启动的服务发起数据发送
+     * @param address 在线客户端地址带端口号
+     * @param content 需要发送的原始数据
+     * @return true:发送成功；false:发送失败
+     */
+    public boolean sendMessageSync(int port, String address, Object content) {
+        if (!isRun(port)) {
+            if (TcpLibConfig.getInstance().isDebugMode()) {
+                Log.w(TAG, "服务端端口: " + port + ", 服务端未启动");
+            }
+            return false;
+        }
+        Map<String, TcpDataBuilder> map = portMap.get(port);
+        if (null == map || map.isEmpty()) {
+            if (TcpLibConfig.getInstance().isDebugMode()) {
+                Log.w(TAG, "服务端端口: " + port + ", 服务端没有客户端连接");
+            }
+            return false;
+        }
+        TcpDataBuilder disposeBuilder = map.get(address);
+        if (null == disposeBuilder) {
+            if (TcpLibConfig.getInstance().isDebugMode()) {
+                Log.w(TAG, "服务端端口: " + port + ", " +
+                        "客户端: " + address + ", 指定客户端未连接服务器");
+            }
+            return false;
+        }
+        return disposeBuilder.serviceSendMessageSync(port, address, content);
+    }
+
+    /**
+     * 向指定的客户端按照指定数据格式同步发送数据
+     * <p>
+     * 此方法会阻塞当前线程直到数据发送结束，请在子线程中调用
+     * <p>
+     * 如果运行了多个服务器时，则操作端口号最小的服务器
+     *
+     * @param address 在线客户端地址带端口号
+     * @param content 需要发送的原始数据
+     * @return true:发送成功；false:发送失败
+     */
+    public boolean sendMessageSync(String address, Object content) {
+        Integer port = onlyRunServicePort();
+        if (null == port) {
+            if (TcpLibConfig.getInstance().isDebugMode()) {
+                Log.w(TAG, "当前没有正在运行的服务器");
+            }
+            return false;
+        }
+
+        return sendMessageSync(port, address, content);
+    }
+
+    /**
      * 通过指定服务器向与此服务器连接的所有客户端按照指定数据格式发送数据
      *
      * @param port    指定服务器端口号，使用此端口启动的服务发起数据发送

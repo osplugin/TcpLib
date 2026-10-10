@@ -241,6 +241,63 @@ public class UdpLibClient {
     }
 
     /**
+     * 向指定的服务端按照指定数据格式同步发送数据
+     * <p>
+     * 此方法会阻塞当前线程直到数据发送结束，请在子线程中调用
+     *
+     * @param ipAddress 服务端ip
+     * @param port      端口
+     * @param content   需要发送的原始数据
+     * @return true:发送成功；false:发送失败
+     */
+    public boolean sendMessageSync(String ipAddress, int port, Object content) {
+        return sendMessageSync(String.format(Locale.getDefault(), IP_ADDRESS, ipAddress, port), content);
+    }
+
+    /**
+     * 向指定的服务端按照指定数据格式同步发送数据
+     * <p>
+     * 此方法会阻塞当前线程直到数据发送结束，请在子线程中调用
+     *
+     * @param address 服务端地址，ip:port 形式，如：0.0.0.0:30000
+     * @param content 需要发送的原始数据
+     * @return true:发送成功；false:发送失败
+     */
+    public boolean sendMessageSync(String address, Object content) {
+        UdpDataBuilder disposeBuilder = SERVICE_MAP.get(address);
+        if (null == disposeBuilder) {
+            if (UdpLibConfig.getInstance().isDebugMode()) {
+                Log.w(TAG, "服务端端口: " + address + ", 指定服务端未连接");
+            }
+            return false;
+        }
+
+        return disposeBuilder.clientSendMessageSync(address, content);
+    }
+
+    /**
+     * 向指定的服务端按照指定数据格式同步发送数据
+     * <p>
+     * 此方法会阻塞当前线程直到数据发送结束，请在子线程中调用
+     * <p>
+     * 如果连接了多个服务器时，则操作服务器正序排列最小的那台
+     *
+     * @param content 需要发送的原始数据
+     * @return true:发送成功；false:发送失败
+     */
+    public boolean sendMessageSync(Object content) {
+        String serviceAddress = onlyConnectServicePort();
+        if (TextUtils.isEmpty(serviceAddress)) {
+            if (UdpLibConfig.getInstance().isDebugMode()) {
+                Log.w(TAG, "当前没有连接中的服务器");
+            }
+            return false;
+        }
+
+        return sendMessageSync(serviceAddress, content);
+    }
+
+    /**
      * 向所有已连接的服务端按照指定数据格式发送数据
      *
      * @param content 需要发送的原始数据
