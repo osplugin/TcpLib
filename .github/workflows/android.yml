@@ -21,6 +21,15 @@ jobs:
         with:
           fetch-depth: 0
 
+      # 先校验 tag 格式，tag 非法时直接失败，避免后续构建、上传白跑
+      - name: Verify Release Tag
+        run: |
+          # 严格校验Tag格式（支持v前缀和纯数字版本）
+          if [[ ! "${{ github.event.release.tag_name }}" =~ ^v?[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Invalid tag format. Must be like 1.0.0 or v1.0.0"
+            exit 1
+          fi
+
       # 添加执行权限
       - name: Make gradlew executable
         run: chmod +x gradlew
@@ -32,7 +41,20 @@ jobs:
           java-version: '17'
 
       - name: Set up Android SDK
-        uses: android-actions/setup-android@v2
+        uses: android-actions/setup-android@v3
+        with:
+          # 该 action 的 packages 默认值为 'tools platform-tools'，
+          # 但 tools 包已被 Google 从 SDK 仓库移除，sdkmanager 会以
+          # "Warning: Failed to find package 'tools'" 退出码 1 失败，故置空跳过额外包安装
+          packages: ''
+
+      # 工程使用 compileSdkVersion 32 / buildToolsVersion 30.0.3，
+      # 而 runner 镜像仅预装 API 34~37 与 build-tools 34+，需要显式安装
+      - name: Install required Android SDK packages
+        run: |
+          # 自动接受尚未确认的许可
+          yes | sdkmanager --licenses > /dev/null || true
+          sdkmanager "platforms;android-32" "build-tools;30.0.3"
 
       - name: Build all AARs
         run: |
@@ -40,33 +62,16 @@ jobs:
           ./gradlew :${{ env.LIB1_NAME }}:assembleRelease
           ./gradlew :${{ env.LIB2_NAME }}:assembleRelease
 
-      - name: Upload AARs to Release (${{ env.LIB1_NAME }})
-        uses: actions/upload-release-asset@v1
+      # 使用官方 gh CLI 上传，替换已归档、且运行在 node12 的 actions/upload-release-asset@v1
+      - name: Upload AARs to Release
         env:
-          GITHUB_TOKEN: ${{ github.token }}
-        with:
-          upload_url: ${{ github.event.release.upload_url }}
-          asset_path: ${{ env.LIB1_NAME }}/build/outputs/aar/${{ env.LIB1_NAME }}-release.aar
-          asset_name: ${{ env.LIB1_NAME }}-release.aar
-          asset_content_type: application/octet-stream
-
-      - name: Upload AARs to Release (${{ env.LIB2_NAME }})
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-        with:
-          upload_url: ${{ github.event.release.upload_url }}
-          asset_path: ${{ env.LIB2_NAME }}/build/outputs/aar/${{ env.LIB2_NAME }}-release.aar
-          asset_name: ${{ env.LIB2_NAME }}-release.aar
-          asset_content_type: application/octet-stream
-
-      - name: Verify Release Tag
+          GH_TOKEN: ${{ github.token }}
         run: |
-          # 严格校验Tag格式（支持v前缀和纯数字版本）
-          if [[ ! "${{ github.event.release.tag_name }}" =~ ^v?[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "::error::Invalid tag format. Must be like 1.0.0 or v1.0.0"
-            exit 1
-          fi
+          gh release upload "${{ github.event.release.tag_name }}" \
+            "${{ env.LIB1_NAME }}/build/outputs/aar/${{ env.LIB1_NAME }}-release.aar" \
+            "${{ env.LIB2_NAME }}/build/outputs/aar/${{ env.LIB2_NAME }}-release.aar" \
+            --repo "${{ github.repository }}" \
+            --clobber
 
       - name: Trigger JitPack Build
         env:
